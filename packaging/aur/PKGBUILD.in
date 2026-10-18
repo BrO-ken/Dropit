@@ -5,16 +5,16 @@ pkgver=@VERSION@
 pkgrel=1
 pkgdesc="Convert files by dropping them on a radial wheel: images, audio, video, PDF, documents, spreadsheets, archives"
 arch=('x86_64')
-url="https://github.com/Metamorfolog/file_action"
+url="https://github.com/BrO-ken/Dropit"
 license=('@LICENSE@')
 depends=('glibc' 'gcc-libs' 'zlib' 'icu' 'openssl' 'fontconfig' 'libx11' 'libxi' 'libxrandr' 'libxcursor' 'libice' 'libsm')
 optdepends=(
   'ffmpeg: audio and video conversions'
-  'pandoc-cli: document conversions (DOCX, Markdown, EPUB, …)'
+    'pandoc-cli: document conversions (DOCX, Markdown, EPUB, etc.)'
   'libreoffice-fresh: Office files and export to PDF'
   'tesseract: extract text from images (OCR)'
   'tesseract-data-eng: English OCR'
-  'tesseract-data-ces: Czech OCR'
+    'tesseract-data-ara: Arabic OCR'
 )
 provides=('dropit')
 conflicts=('dropit')

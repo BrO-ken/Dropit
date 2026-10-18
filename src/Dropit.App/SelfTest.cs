@@ -163,24 +163,52 @@ internal static class SelfTest
     /// than the plain white caption it replaced. Raises a real MouseLeftButtonUp on the caption's
     /// close button and checks the window actually goes away.
     /// </summary>
-    private static void TestCaptionClosesWindow(List<string> log)
+private static void TestCaptionClosesWindow(List<string> log)
     {
-        var window = new SettingsWindow(new AppSettings(), new ToolLocator(), () => { });
+        // Every window that draws its own caption must have working close buttons. The home window
+        // keeps its own icon button, which is exactly how one of them survived without the hit-test
+        // opt-out and became a picture.
+        Check(Closes<SettingsWindow>(() => new SettingsWindow(new AppSettings(), new ToolLocator(), () => { })),
+            "settings window closes from its caption button");
+        Check(Closes<HomeWindow>(() => new HomeWindow(new AppSettings(), () => { }, _ => { })),
+            "home window closes from its caption button");
+        Check(Closes<WheelEditorWindow>(() => new WheelEditorWindow(new AppSettings(), [], () => { })),
+            "wheel editor closes from its caption button");
+        log.Add("ok caption close");
+    }
+
+    /// <summary>
+    /// A button inside the WindowChrome caption strip is only clickable if it opts out of the chrome's
+    /// hit testing. Raising MouseLeftButtonUp proves nothing about that: RaiseEvent invokes the
+    /// handlers directly and skips hit testing altogether, so a button a real mouse can never reach
+    /// still passes. Assert the property itself, and that the target is not a sliver.
+    /// </summary>
+    private static bool Closes<T>(Func<T> make) where T : Window
+    {
+        var window = make();
         window.Show();
         window.UpdateLayout();
         var close = UI.Chrome.FindCloseButton(window);
-        Check(close is not null, "settings window has a close button");
-        if (close is null)
-            return;
-        close.RaiseEvent(new System.Windows.Input.MouseButtonEventArgs(
+        var reachable = close is not null
+            && System.Windows.Shell.WindowChrome.GetIsHitTestVisibleInChrome(close)
+            && close.ActualWidth >= 32
+            && close.ActualHeight >= 28;
+        if (!reachable)
+        {
+            window.Close();
+            return false;
+        }
+        close!.RaiseEvent(new System.Windows.Input.MouseButtonEventArgs(
             System.Windows.Input.Mouse.PrimaryDevice, Environment.TickCount, System.Windows.Input.MouseButton.Left)
         {
             RoutedEvent = UIElement.MouseLeftButtonUpEvent,
         });
         System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(
             () => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
-        Check(!window.IsVisible, "caption close button closes the settings window");
-        log.Add("ok caption close");
+        var gone = !window.IsVisible;
+        if (!gone)
+            window.Close();
+        return gone;
     }
 
     /// <summary>Reading the Explorer selection goes through late-bound COM, which trimming could break.</summary>

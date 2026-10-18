@@ -124,12 +124,12 @@ internal sealed class HomeWindow : Window
     private UIElement Header(Action openSettings)
     {
         var row = new DockPanel { Margin = new Thickness(0, 0, 0, 16) };
-        var settings = IconButton(Glyphs.Settings, T("Settings", "الإعدادات"), () =>
+        var settings = Chrome.IconButton(Glyphs.Settings, T("Settings", "الإعدادات"), () =>
         {
             Hide();
             openSettings();
         });
-        var close = IconButton(Glyphs.Close, T("Close", "إغلاق"), Close);
+        var close = Chrome.IconButton(Glyphs.Close, T("Close", "إغلاق"), Close, "CaptionClose", destructive: true);
         DockPanel.SetDock(close, Loc.IsRtl ? Dock.Left : Dock.Right);
         DockPanel.SetDock(settings, Loc.IsRtl ? Dock.Left : Dock.Right);
         row.Children.Add(close);
@@ -280,37 +280,5 @@ internal sealed class HomeWindow : Window
             showWheel(null);
         };
         return border;
-    }
-
-    /// <summary>Icon-only chrome button, the same one the shelf uses.</summary>
-    private static Border IconButton(string glyph, string tip, Action click)
-    {
-        var icon = new TextBlock
-        {
-            Text = glyph,
-            FontFamily = Theme.Icons,
-            FontSize = 13,
-            Foreground = Theme.Muted,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        var button = new Border
-        {
-            Background = Brushes.Transparent,
-            CornerRadius = new CornerRadius(8),
-            Padding = new Thickness(9, 7, 9, 8),
-            Margin = new Thickness(6, 0, 0, 0),
-            Cursor = Cursors.Hand,
-            ToolTip = tip,
-            Child = icon,
-        };
-        button.MouseEnter += (_, _) => { button.Background = Theme.Hover; icon.Foreground = Theme.Text; };
-        button.MouseLeave += (_, _) => { button.Background = Brushes.Transparent; icon.Foreground = Theme.Muted; };
-        button.MouseLeftButtonUp += (_, e) =>
-        {
-            e.Handled = true;
-            click();
-        };
-        return button;
     }
 }

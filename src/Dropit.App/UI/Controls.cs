@@ -98,6 +98,10 @@ internal static class Controls
         }
 
         var row = new DockPanel { LastChildFill = true };
+        // The gap between the label and the control belongs on the label, on whichever side the control
+        // is docked. Putting it on the control alone leaves them touching in Arabic, where the control
+        // sits on the left and long Arabic labels run right up against it.
+        const double Gap = 20;
         if (glyph is not null)
         {
             var icon = new TextBlock
@@ -115,10 +119,11 @@ internal static class Controls
         if (control is FrameworkElement fe)
         {
             fe.VerticalAlignment = VerticalAlignment.Center;
-            fe.Margin = new Thickness(16, 0, 0, 0);
+            fe.Margin = new Thickness(0);
             DockPanel.SetDock(fe, controlSide);
             row.Children.Add(fe);
         }
+        left.Margin = Loc.IsRtl ? new Thickness(Gap, 0, 0, 0) : new Thickness(0, 0, Gap, 0);
         row.Children.Add(left);
 
         var content = new StackPanel();

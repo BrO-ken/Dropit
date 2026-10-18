@@ -104,6 +104,56 @@ internal static class Chrome
     }
 
     /// <summary>
+    /// Any button that lives in the caption strip: a glyph, a generous hit area, an obvious hover, and
+    /// the hit-test opt-out from the chrome. Every window that draws its own caption must build its
+    /// buttons here - a copy of this without the last line is a picture, not a button.
+    /// </summary>
+    public static Border IconButton(string glyph, string tip, Action click, string name = "", bool destructive = false)
+    {
+        var icon = new TextBlock
+        {
+            Text = glyph,
+            FontFamily = Theme.Icons,
+            FontSize = 11,
+            Foreground = Theme.Muted,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            // The glyph must not eat the clicks meant for the padding around it.
+            IsHitTestVisible = false,
+        };
+        var button = new Border
+        {
+            Name = name,
+            Background = Brushes.Transparent,
+            CornerRadius = new CornerRadius(6),
+            Width = 40,
+            Height = 32,
+            Margin = new Thickness(2, 3, 2, 3),
+            Cursor = Cursors.Hand,
+            ToolTip = tip,
+            Child = icon,
+            Focusable = false,
+        };
+        button.MouseEnter += (_, _) =>
+        {
+            button.Background = destructive ? Theme.AccentRed : Theme.Hover;
+            icon.Foreground = destructive ? Brushes.White : Theme.Text;
+        };
+        button.MouseLeave += (_, _) =>
+        {
+            button.Background = Brushes.Transparent;
+            icon.Foreground = Theme.Muted;
+        };
+        button.MouseLeftButtonUp += (_, e) =>
+        {
+            e.Handled = true;
+            click();
+        };
+        WindowChrome.SetIsHitTestVisibleInChrome(button, true);
+        return button;
+    }
+
+    /// <summary>
     /// A caption button. Two things make it feel grabbable: the hit area covers the whole strip height
     /// instead of hugging a 10px glyph, and the hover state is obvious. Close additionally turns red,
     /// which is the one place in a window where a colour carries meaning.

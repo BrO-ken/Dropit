@@ -41,8 +41,7 @@ internal sealed class ShelfWindow : Window
         FontFamily = Theme.UiFont;
 
         _header = new TextBlock { Foreground = Theme.Text, FontFamily = Theme.DisplayFont, FontWeight = FontWeights.SemiBold, FontSize = 14, VerticalAlignment = VerticalAlignment.Center };
-        var close = IconButton("\uE711", T("Close", "إغلاق"));
-        close.Click += (_, _) => Close();
+        var close = UI.Chrome.IconButton("\uE711", T("Close", "إغلاق"), () => Close(), "CaptionClose", destructive: true);
         var header = new DockPanel { Margin = new Thickness(14, 10, 8, 8), Background = Brushes.Transparent, Cursor = Cursors.SizeAll };
         DockPanel.SetDock(close, Loc.IsRtl ? Dock.Left : Dock.Right);
         header.Children.Add(close);
@@ -226,17 +225,6 @@ internal sealed class ShelfWindow : Window
         panel.AppendChild(text);
         return new DataTemplate { VisualTree = panel };
     }
-
-    private static Button IconButton(string glyph, string tip) => new()
-    {
-        Content = new TextBlock { Text = glyph, FontFamily = Theme.Icons, FontSize = 11, Foreground = Theme.Muted },
-        ToolTip = tip,
-        Width = 26,
-        Height = 26,
-        Background = Brushes.Transparent,
-        BorderThickness = new Thickness(0),
-        Cursor = Cursors.Hand,
-    };
 
     private sealed class IconConverter : System.Windows.Data.IValueConverter
     {
