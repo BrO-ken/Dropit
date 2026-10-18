@@ -20,15 +20,15 @@ public static class SelfTest
             Program.WithBundledFont(AppBuilder.Configure<App>().UseSkia())
                 .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
                 .SetupWithoutStarting();
-            foreach (var (language, dark, folder) in new[] { (Language.English, true, "en"), (Language.English, false, "en-light"), (Language.Czech, true, "cs") })
+            foreach (var (language, dark, folder) in new[] { (Language.English, true, "en"), (Language.English, false, "en-light"), (Language.Arabic, true, "ar"), (Language.Arabic, false, "ar-light") })
             {
                 Loc.Current = language;
                 Palette.Override = dark;
-                RenderAll(Path.Combine(outDir, folder), language == Language.English, log);
+                RenderAll(Path.Combine(outDir, folder), log);
             }
             log.AddRange(SmokeTest.Run(Path.Combine(outDir, "smoke")));
-            var json = System.Text.Json.JsonSerializer.Serialize(new LinuxSettings { Language = Language.Czech }, LinuxSettingsJson.Default.LinuxSettings);
-            if (System.Text.Json.JsonSerializer.Deserialize(json, LinuxSettingsJson.Default.LinuxSettings)?.Language != Language.Czech)
+            var json = System.Text.Json.JsonSerializer.Serialize(new LinuxSettings { Language = Language.Arabic }, LinuxSettingsJson.Default.LinuxSettings);
+            if (System.Text.Json.JsonSerializer.Deserialize(json, LinuxSettingsJson.Default.LinuxSettings)?.Language != Language.Arabic)
                 throw new InvalidOperationException("settings JSON round trip");
             log.Add("ok settings json");
             File.WriteAllLines(Path.Combine(outDir, "self-test.txt"), log);
@@ -44,14 +44,14 @@ public static class SelfTest
         }
     }
 
-    private static void RenderAll(string dir, bool english, List<string> log)
+    private static void RenderAll(string dir, List<string> log)
     {
         Directory.CreateDirectory(dir);
-        string N(string cs, string en) => english ? en : cs;
+        string N(string en, string ar) => Loc.Current == Language.Arabic ? ar : en;
         var settings = new LinuxSettings();
         var controller = new Controller(settings, null);
-        var photo = new List<FileItem> { new(N("/home/jana/Obrázky/dovolená.jpg", "/home/jane/Pictures/vacation.jpg")) };
-        var video = new List<FileItem> { new(N("/home/jana/Videa/klip.mov", "/home/jane/Videos/clip.mov")) };
+        var photo = new List<FileItem> { new("/home/jane/Pictures/vacation.jpg") };
+        var video = new List<FileItem> { new("/home/jane/Videos/clip.mov") };
 
         Save(Wheel(controller, photo, WheelKind.Convert, 1), dir, "wheel-image-convert", log);
         Save(Wheel(controller, photo, WheelKind.Tools, 0), dir, "wheel-image-tools", log);
@@ -60,9 +60,9 @@ public static class SelfTest
         Save(Wheel(controller, [], WheelKind.Convert, -1), dir, "wheel-drop-zone", log);
 
         var jobs = new JobsWindow();
-        jobs.Add(N("Převod na MP4", "Convert to MP4"), N("klip.mov", "clip.mov"), () => { }).Report(0.42);
-        jobs.Add(N("Komprimovat", "Compress"), N("dovolená.jpg", "vacation.jpg"), () => { })
-            .Complete([N("/home/jana/Obrázky/dovolená (komprimováno).jpg", "/home/jane/Pictures/vacation (compressed).jpg")], null);
+        jobs.Add(N("Convert to MP4", "تحويل إلى MP4"), "clip.mov", () => { }).Report(0.42);
+        jobs.Add(N("Compress", "ضغط"), "vacation.jpg", () => { })
+            .Complete(["/home/jane/Pictures/vacation (compressed).jpg"], null);
         Save(jobs, dir, "jobs", log);
 
         var trim = LinuxOperations.Conversions(settings).Single(o => o.Id == "video.trim");

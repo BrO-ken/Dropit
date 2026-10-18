@@ -39,14 +39,14 @@ public static class Cli
     }
 
     private static string Help => $"""
-        fileaction {Version} – {T("převod souborů puštěním na kolo", "convert files by dropping them on a wheel")}
+        fileaction {Version} – {T("convert files by dropping them on a wheel", "حوّل الملفات بإفلاتها على عجلة")}
 
-          fileaction                       {T("kolo, na které můžete přetahovat soubory", "a wheel you can drop files on")}
-          fileaction FILE...               {T("kolo pro tyto soubory", "the wheel for these files")}
-          fileaction list FILE...          {T("co se s nimi dá udělat", "what can be done with them")}
+          fileaction                       {T("a wheel you can drop files on", "عجلة يمكن إفلات الملفات عليها")}
+          fileaction FILE...               {T("the wheel for these files", "عجلة هذه الملفات")}
+          fileaction list FILE...          {T("what can be done with them", "ما يمكن فعله بها")}
           fileaction run ID FILE... [--param KEY=VALUE]... [--out DIR]
-                                           {T("spustí převod nebo nástroj (ID z list)", "runs a conversion or tool (ID from list)")}
-          fileaction integrate [--remove]  {T("položka FileAction v Nautilu, Dolphinu a Nemu", "FileAction item in Nautilus, Dolphin and Nemo")}
+                                           {T("runs a conversion or tool (ID from list)", "ينفّذ تحويلًا أو أداة (المعرّف من الأمر list)")}
+          fileaction integrate [--remove]  {T("FileAction item in Nautilus, Dolphin and Nemo", "عنصر FileAction في Nautilus وDolphin وNemo")}
           fileaction --version
         """;
 
@@ -57,11 +57,11 @@ public static class Cli
         {
             var full = Path.GetFullPath(p);
             if (!File.Exists(full) && !Directory.Exists(full))
-                throw new ConversionException(T($"Soubor neexistuje: {p}", $"No such file: {p}"));
+                throw new ConversionException(T($"No such file: {p}", $"لا يوجد ملف بهذا الاسم: {p}"));
             items.Add(new FileItem(full));
         }
         if (items.Count == 0)
-            throw new ConversionException(T("Zadejte aspoň jeden soubor.", "Give at least one file."));
+            throw new ConversionException(T("Give at least one file.", "مرّر ملفًا واحدًا على الأقل."));
         return items;
     }
 
@@ -74,7 +74,7 @@ public static class Cli
             var ops = Core.Operations.Catalog.For(LinuxOperations.Conversions(settings), wheel, items, tools);
             if (ops.Count == 0)
                 continue;
-            Console.WriteLine(wheel == WheelKind.Convert ? T("Převést:", "Convert:") : T("Nástroje:", "Tools:"));
+            Console.WriteLine(wheel == WheelKind.Convert ? T("Convert:", "التحويل:") : T("Tools:", "الأدوات:"));
             foreach (var op in ops)
                 Console.WriteLine($"  {op.Id,-22} {op.Label}{(op.Subtitle is null ? "" : $" ({op.Subtitle})")}");
         }
@@ -107,11 +107,11 @@ public static class Cli
         var items = Items(paths);
         var tools = new ToolLocator();
         var op = LinuxOperations.Conversions(settings).FirstOrDefault(o => o.Id == args[0])
-            ?? throw new ConversionException(T($"Neznámé ID: {args[0]} (viz fileaction list)", $"Unknown ID: {args[0]} (see fileaction list)"));
+            ?? throw new ConversionException(T($"Unknown ID: {args[0]} (see fileaction list)", $"معرّف غير معروف: {args[0]} (راجع fileaction list)"));
         if (!op.AppliesTo(items))
-            throw new ConversionException(T($"{op.Id} se na tyto soubory nehodí.", $"{op.Id} doesn't apply to these files."));
+            throw new ConversionException(T($"{op.Id} doesn't apply to these files.", $"\u200F{op.Id} لا ينطبق على هذه الملفات."));
         if (!op.IsAvailable(tools, items))
-            throw new ConversionException(T($"{op.Id} potřebuje nástroj, který není nainstalovaný.", $"{op.Id} needs a tool that isn't installed.")
+            throw new ConversionException(T($"{op.Id} needs a tool that isn't installed.", $"\u200F{op.Id} يحتاج أداة غير مثبّتة.")
                 + (op.Requires.Count > 0 ? " " + string.Join(", ", op.Requires.Select(ToolLocator.InstallHint)) : ""));
 
         var context = new OperationContext

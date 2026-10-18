@@ -180,7 +180,7 @@ public class IntegrationTests : IClassFixture<IntegrationTests.Samples>
                     Assert.Empty(Directory.GetFiles(outDir, "*.part.*"));
                     output.WriteLine($"ok   {op.Id} → {string.Join(", ", result.Outputs.Select(Path.GetFileName))}");
                 }
-                catch (ConversionException ex) when (key is "pdf" && !_s.PdfHasText && ex.Message.Contains("neobsahuje žádný text"))
+                catch (ConversionException ex) when (key is "pdf" && !_s.PdfHasText && ex.Message.Contains("لا يحتوي ملف PDF على نص"))
                 {
                     output.WriteLine($"ok   {op.Id} (expected: image-only PDF has no text)");
                 }
@@ -217,7 +217,7 @@ public class IntegrationTests : IClassFixture<IntegrationTests.Samples>
         if (_s.Tools.Has(ExternalTool.Ffmpeg))
             await Run("audio.concat", "wav", "mp3");
 
-        var merged = Directory.GetFiles(outDir, "*.pdf").First(f => f.Contains("spojeno"));
+        var merged = Directory.GetFiles(outDir, "*.pdf").First(f => f.Contains("مدمج"));
         Assert.Equal(PdfBackend.PageCount(_s.Files["pdf"]) * 2, PdfBackend.PageCount(merged));
     }
 
@@ -228,7 +228,7 @@ public class IntegrationTests : IClassFixture<IntegrationTests.Samples>
             return;
         var op = Catalog.Build().Single(o => o.Id == "video.to.mp3");
         var ex = await Assert.ThrowsAsync<ConversionException>(() => op.ExecuteAsync([new FileItem(path)], _s.Context(Path.Combine(_s.Dir, "out", "mute"))));
-        Assert.Contains("zvukovou", ex.Message);
+        Assert.Contains("مسار صوتي", ex.Message);
         // Other video operations still work without audio.
         var speed = Catalog.Build().Single(o => o.Id == "video.speed2");
         Assert.NotEmpty((await speed.ExecuteAsync([new FileItem(path)], _s.Context(Path.Combine(_s.Dir, "out", "mute")))).Outputs);

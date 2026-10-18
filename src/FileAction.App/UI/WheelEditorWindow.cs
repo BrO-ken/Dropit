@@ -25,15 +25,15 @@ internal sealed class WheelEditorWindow : Window
     private static (string Czech, string English, string Glyph, string[] Samples)[] Groups =>
     [
         // Two formats per group, so "convert to X" shows up even when one sample already is X.
-        ("Obrázky", "Images", Glyphs.Photo, ["a.png", "a.jpg", "a.gif"]),
-        ("Video", "Video", Glyphs.Video, ["a.mp4", "a.mov"]),
-        ("Audio", "Audio", Glyphs.Audio, ["a.mp3", "a.wav"]),
+        ("Images", "صور", Glyphs.Photo, ["a.png", "a.jpg", "a.gif"]),
+        ("Video", "فيديو", Glyphs.Video, ["a.mp4", "a.mov"]),
+        ("Audio", "صوت", Glyphs.Audio, ["a.mp3", "a.wav"]),
         ("PDF", "PDF", Glyphs.Page, ["a.pdf"]),
-        ("Dokumenty", "Documents", Glyphs.Document, ["a.docx", "a.md"]),
-        ("Prezentace", "Slides", Glyphs.Page, ["a.pptx", "a.odp"]),
-        ("Tabulky", "Spreadsheets", Glyphs.Table, ["a.xlsx", "a.csv"]),
-        ("Titulky", "Subtitles", Glyphs.Subtitles, ["a.srt", "a.vtt"]),
-        ("Archivy", "Archives", Glyphs.Pack, ["a.zip", "a.tar"]),
+        ("Documents", "مستندات", Glyphs.Document, ["a.docx", "a.md"]),
+        ("Slides", "شرائح", Glyphs.Page, ["a.pptx", "a.odp"]),
+        ("Spreadsheets", "جداول بيانات", Glyphs.Table, ["a.xlsx", "a.csv"]),
+        ("Subtitles", "ترجمات", Glyphs.Subtitles, ["a.srt", "a.vtt"]),
+        ("Archives", "أرشيفات", Glyphs.Pack, ["a.zip", "a.tar"]),
     ];
 
     internal WheelEditorWindow(AppSettings settings, IReadOnlyList<Operation> operations, Action changed)
@@ -41,8 +41,9 @@ internal sealed class WheelEditorWindow : Window
         _settings = settings;
         _operations = operations;
         _changed = changed;
+        Direction.Apply(this);
         Theme.Refresh();
-        Title = T("FileAction – úprava kola", "FileAction – customize wheels");
+        Title = T("FileAction – customize wheels", "FileAction – تخصيص العجلات");
         Width = 640;
         Height = 820;
         MinWidth = 480;
@@ -77,15 +78,14 @@ internal sealed class WheelEditorWindow : Window
     {
         var offset = _scroll.VerticalOffset;
         var root = new StackPanel { Margin = new Thickness(32, 28, 32, 32) };
-        var title = Text(T("Úprava kola", "Customize wheels"), 26, FontWeights.SemiBold);
+        var title = Text(T("Customize wheels", "تخصيص العجلات"), 26, FontWeights.SemiBold);
         title.FontFamily = Theme.DisplayFont;
         root.Children.Add(title);
-        var intro = Text(T("Hvězdičkou označte oblíbené výseče, budou vždy první a na stejném místě. Přepínačem výseč skryjete.",
-                           "Star your favourite slices: they always come first, in the same place. Use the switch to hide a slice."),
+        var intro = Text(T("Star your favourite slices: they always come first, in the same place. Use the switch to hide a slice.", "ضع نجمة على شرائحك المفضّلة: فهي تأتي دائمًا في المقام نفسه وبالترتيب نفسه. استخدم المفتاح لإخفاء شريحة."),
             13.5, brush: Theme.Muted);
         intro.Margin = new Thickness(0, 4, 0, 0);
         root.Children.Add(intro);
-        var reset = Button(T("Obnovit výchozí", "Reset to default"), () =>
+        var reset = Button(T("Reset to default", "إعادة التعيين إلى الافتراضي"), () =>
         {
             _settings.HiddenOperations.Clear();
             _settings.FavoriteOperations.Clear();
@@ -98,15 +98,15 @@ internal sealed class WheelEditorWindow : Window
         // Slices that work for anything (archive, actions) are listed once, separately.
         var folder = new FileItem(Path.GetTempPath());
         var shown = new HashSet<string>();
-        foreach (var (czech, english, glyph, samples) in Groups)
+        foreach (var (english, arabic, glyph, samples) in Groups)
         {
             var items = samples.Select(s => new FileItem(s)).ToList();
             var ops = _operations
                 .Where(o => o.Wheel != WheelKind.Actions && !o.AppliesTo([folder]) && Applies(o, items) && shown.Add(o.Id))
                 .ToList();
-            AddGroup(root, T(czech, english), glyph, ops);
+            AddGroup(root, T(english, arabic), glyph, ops);
         }
-        AddGroup(root, T("Všechny soubory a složky", "Any file or folder"), Glyphs.Folder,
+        AddGroup(root, T("Any file or folder", "أي ملف أو مجلد"), Glyphs.Folder,
             _operations.Where(o => shown.Add(o.Id)).ToList());
 
         _scroll.Content = root;
@@ -155,7 +155,7 @@ internal sealed class WheelEditorWindow : Window
             Padding = new Thickness(8),
             Cursor = Cursors.Hand,
             VerticalAlignment = VerticalAlignment.Center,
-            ToolTip = T("Oblíbená – vždy první", "Favourite – always first"),
+            ToolTip = T("Favourite – always first", "المفضّلة – دائمًا في المقام الأول"),
         };
         star.MouseLeftButtonUp += (_, _) =>
         {
@@ -195,9 +195,9 @@ internal sealed class WheelEditorWindow : Window
         label.Children.Add(Text(detail, 11.5, brush: Theme.Muted, wrap: false));
 
         var row = new DockPanel { Margin = new Thickness(10, 6, 2, 6) };
-        DockPanel.SetDock(icon, Dock.Left);
-        DockPanel.SetDock(toggle, Dock.Right);
-        DockPanel.SetDock(star, Dock.Right);
+        DockPanel.SetDock(icon, Loc.IsRtl ? Dock.Right : Dock.Left);
+        DockPanel.SetDock(toggle, Loc.IsRtl ? Dock.Left : Dock.Right);
+        DockPanel.SetDock(star, Loc.IsRtl ? Dock.Left : Dock.Right);
         row.Children.Add(icon);
         row.Children.Add(toggle);
         row.Children.Add(star);

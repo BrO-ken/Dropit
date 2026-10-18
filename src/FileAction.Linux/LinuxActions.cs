@@ -23,24 +23,24 @@ public static class LinuxActions
 {
     public static IReadOnlyList<Operation> Build(Func<string, Func<CancellationToken, Task<IReadOnlyList<string>>>, Task> track) =>
     [
-        new LinuxAction("action.copy", T("Kopírovat", "Copy"), Glyphs.Copy, T("do složky…", "to folder…"),
+        new LinuxAction("action.copy", T("Copy", "نسخ"), Glyphs.Copy, T("to folder…", "إلى مجلد…"),
             items => CopyOrMoveAsync(items, move: false, track)),
-        new LinuxAction("action.move", T("Přesunout", "Move"), Glyphs.Move, T("do složky…", "to folder…"),
+        new LinuxAction("action.move", T("Move", "نقل"), Glyphs.Move, T("to folder…", "إلى مجلد…"),
             items => CopyOrMoveAsync(items, move: true, track)),
-        new LinuxAction("action.path", T("Kopírovat cestu", "Copy path"), Glyphs.Link, null,
+        new LinuxAction("action.path", T("Copy path", "نسخ المسار"), Glyphs.Link, null,
             items => WithHelperWindowAsync(async window =>
             {
                 if (window.Clipboard is { } clipboard)
                     await Avalonia.Input.Platform.ClipboardExtensions.SetTextAsync(clipboard, string.Join("\n", items.Select(i => i.Path)));
             })),
-        new LinuxAction("action.terminal", T("Terminál", "Terminal"), Glyphs.Terminal, T("otevřít zde", "open here"), items =>
+        new LinuxAction("action.terminal", T("Terminal", "الطرفية"), Glyphs.Terminal, T("open here", "افتح هنا"), items =>
         {
             var folder = items[0].IsDirectory ? items[0].Path : Path.GetDirectoryName(items[0].Path)!;
             if (!Desktop.Terminal(folder))
-                throw new ConversionException(T("Nenašel jsem terminál. Nastavte proměnnou TERMINAL.", "No terminal found. Set the TERMINAL variable."));
+                throw new ConversionException(T("No terminal found. Set the TERMINAL variable.", "لا توجد طرفية. اضبط المتغيّر TERMINAL."));
             return Task.CompletedTask;
         }),
-        new LinuxAction("action.reveal", T("Ve složce", "Show"), Glyphs.Folder, T("ve správci souborů", "in file manager"), items =>
+        new LinuxAction("action.reveal", T("Show", "إظهار"), Glyphs.Folder, T("in file manager", "في مدير الملفات"), items =>
         {
             Desktop.Reveal(items[0].Path);
             return Task.CompletedTask;
@@ -52,12 +52,12 @@ public static class LinuxActions
         string? target = null;
         await WithHelperWindowAsync(async window =>
         {
-            var folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = move ? T("Kam přesunout?", "Move to…") : T("Kam zkopírovat?", "Copy to…") });
+            var folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = move ? T("Move to…", "نقل إلى…") : T("Copy to…", "نسخ إلى…") });
             target = folders.FirstOrDefault()?.TryGetLocalPath();
         });
         if (target is null)
             return;
-        await track(move ? T("Přesouvám", "Moving") : T("Kopíruji", "Copying"), ct => Task.Run<IReadOnlyList<string>>(() =>
+        await track(move ? T("Moving", "جارٍ النقل") : T("Copying", "جارٍ النسخ"), ct => Task.Run<IReadOnlyList<string>>(() =>
         {
             var results = new List<string>();
             foreach (var item in items)

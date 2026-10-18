@@ -26,12 +26,16 @@ internal static class SelfTest
             Directory.CreateDirectory(outDir);
             _ = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
             JobCard.Animate = false;
-            foreach (var (language, dark, folder) in new[] { (Language.English, true, "en"), (Language.English, false, "en-light"), (Language.Czech, true, "cs") })
+            foreach (var (language, dark, folder) in new[]
+                     {
+                         (Language.English, true, "en"), (Language.English, false, "en-light"),
+                         (Language.Arabic, true, "ar"), (Language.Arabic, false, "ar-light"),
+                     })
             {
                 Loc.Current = language;
                 Theme.Override = dark;
                 Theme.Refresh();
-                RenderAll(Path.Combine(outDir, folder), language == Language.English, log);
+                RenderAll(Path.Combine(outDir, folder), log);
             }
 
             log.AddRange(SmokeTest.Run(Path.Combine(outDir, "smoke")));
@@ -60,10 +64,10 @@ internal static class SelfTest
         }
     }
 
-    private static void RenderAll(string outDir, bool english, List<string> log)
+    private static void RenderAll(string outDir, List<string> log)
     {
         Directory.CreateDirectory(outDir);
-        string N(string cs, string en) => english ? en : cs;
+        string N(string en, string ar) => Loc.Current == Language.Arabic ? ar : en;
         var settings = new AppSettings();
         var tools = new ToolLocator();
         var core = WheelController.BuildOperations();
@@ -71,16 +75,18 @@ internal static class SelfTest
         IReadOnlyList<Operation> Source(WheelKind wheel, IReadOnlyList<FileItem> items) =>
             Catalog.For(wheel == WheelKind.Actions ? actions : core, wheel, items, tools);
 
+        // Paths stay latin in every language: that is the harder bidi case, an LTR path inside
+        // a right-to-left panel, and the previews are where it gets checked.
         var samples = new (string Name, WheelMode Mode, WheelKind Wheel, string[] Files, int Highlight)[]
         {
-            ("wheel-image-convert", WheelMode.Drag, WheelKind.Convert, [N(@"C:\Fotky\dovolená.jpg", @"C:\Photos\vacation.jpg")], 1),
-            ("wheel-image-tools", WheelMode.Click, WheelKind.Tools, [N(@"C:\Fotky\dovolená.jpg", @"C:\Photos\vacation.jpg")], 0),
-            ("wheel-video-convert", WheelMode.Drag, WheelKind.Convert, [N(@"C:\Videa\klip.mov", @"C:\Videos\clip.mov")], 0),
-            ("wheel-video-tools", WheelMode.Drag, WheelKind.Tools, [N(@"C:\Videa\klip.mov", @"C:\Videos\clip.mov")], 3),
-            ("wheel-pdf-convert", WheelMode.Drag, WheelKind.Convert, [N(@"C:\Dokumenty\smlouva.pdf", @"C:\Documents\contract.pdf")], 2),
+            ("wheel-image-convert", WheelMode.Drag, WheelKind.Convert, [@"C:\Photos\vacation.jpg"], 1),
+            ("wheel-image-tools", WheelMode.Click, WheelKind.Tools, [@"C:\Photos\vacation.jpg"], 0),
+            ("wheel-video-convert", WheelMode.Drag, WheelKind.Convert, [@"C:\Videos\clip.mov"], 0),
+            ("wheel-video-tools", WheelMode.Drag, WheelKind.Tools, [@"C:\Videos\clip.mov"], 3),
+            ("wheel-pdf-convert", WheelMode.Drag, WheelKind.Convert, [@"C:\Documents\contract.pdf"], 2),
             ("wheel-pdf-tools", WheelMode.Click, WheelKind.Tools, [@"C:\a.pdf", @"C:\b.pdf"], 0),
-            ("wheel-sheet-convert", WheelMode.Drag, WheelKind.Convert, [N(@"C:\Data\tabulka.xlsx", @"C:\Data\sales.xlsx")], -1),
-            ("wheel-actions", WheelMode.Drag, WheelKind.Actions, [N(@"C:\Fotky\dovolená.jpg", @"C:\Photos\vacation.jpg")], 4),
+            ("wheel-sheet-convert", WheelMode.Drag, WheelKind.Convert, [@"C:\Data\sales.xlsx"], -1),
+            ("wheel-actions", WheelMode.Drag, WheelKind.Actions, [@"C:\Photos\vacation.jpg"], 4),
             ("wheel-waiting-for-drop", WheelMode.Drag, WheelKind.Convert, [], -1),
         };
         foreach (var s in samples)
@@ -97,10 +103,10 @@ internal static class SelfTest
         log.Add($"ok {Path.GetFileName(outDir)}/settings");
 
         var jobs = new JobsWindow();
-        var running = jobs.Add(N("Převod na MP4", "Convert to MP4"), N("klip.mov", "clip.mov"), () => { }, @"C:\x.mov");
+        var running = jobs.Add(N("Convert to MP4", "تحويل إلى MP4"), "clip.mov", () => { }, @"C:\x.mov");
         running.Report(0.42);
-        jobs.Add(N("Komprimovat", "Compress"), N("dovolená.jpg", "vacation.jpg"), () => { }, @"C:\x.jpg").Complete([N(@"C:\Fotky\dovolená (komprimováno).jpg", @"C:\Photos\vacation (compressed).jpg")], null);
-        jobs.Add(N("Převod na DOCX", "Convert to DOCX"), N("smlouva.pdf", "contract.pdf"), () => { }, @"C:\x.pdf").Fail(N("Chybí nástroj Pandoc. Nainstalujte ho příkazem: ", "Pandoc is missing. Install it with: ") + "winget install JohnMacFarlane.Pandoc");
+        jobs.Add(N("Compress", "ضغط"), "vacation.jpg", () => { }, @"C:\x.jpg").Complete([@"C:\Photos\vacation (compressed).jpg"], null);
+        jobs.Add(N("Convert to DOCX", "تحويل إلى DOCX"), "contract.pdf", () => { }, @"C:\x.pdf").Fail(N("Pandoc is missing. Install it with: ", "‏‏Pandoc غير مثبّت. ثبّته باستخدام: ") + "winget install JohnMacFarlane.Pandoc");
         SaveWindow(jobs, Path.Combine(outDir, "jobs.png"), 380, desktop: true);
         jobs.Close();
         log.Add($"ok {Path.GetFileName(outDir)}/jobs");
@@ -112,7 +118,7 @@ internal static class SelfTest
         log.Add($"ok {Path.GetFileName(outDir)}/wheel-editor");
 
         // Customised wheel and the "repeat last" view.
-        var photo = new List<FileItem> { new(N(@"C:\Fotky\dovolená.jpg", @"C:\Photos\vacation.jpg")) };
+        var photo = new List<FileItem> { new(@"C:\Photos\vacation.jpg") };
         IReadOnlyList<Operation> Arranged(WheelKind wheel, IReadOnlyList<FileItem> items) =>
             WheelLayout.Arrange(Source(wheel, items), settings.HiddenOperations, settings.FavoriteOperations);
         var custom = new WheelWindow(WheelMode.Drag, WheelKind.Convert, photo, settings, Arranged, (_, _) => { });
@@ -127,7 +133,7 @@ internal static class SelfTest
         log.Add($"ok {Path.GetFileName(outDir)}/wheel-repeat");
 
         var trim = core.Single(o => o.Id == "video.trim");
-        var dialog = new ParameterDialog(trim, [new FileItem(N(@"C:\Videa\klip.mov", @"C:\Videos\clip.mov"))]);
+        var dialog = new ParameterDialog(trim, [new FileItem(@"C:\Videos\clip.mov")]);
         SaveWindow(dialog, Path.Combine(outDir, "trim-dialog.png"), 360);
         log.Add($"ok {Path.GetFileName(outDir)}/parameter dialog");
     }
@@ -135,10 +141,10 @@ internal static class SelfTest
     /// <summary>The settings file is written with source-generated JSON (no reflection in the trimmed build).</summary>
     private static void TestSettingsRoundTrip(List<string> log)
     {
-        var settings = new AppSettings { Hotkey = HotkeyPreset.CtrlAltW, FavoriteOperations = ["image.to.webp"], Language = Language.Czech };
+        var settings = new AppSettings { Hotkey = HotkeyPreset.CtrlAltW, FavoriteOperations = ["image.to.webp"], Language = Language.Arabic };
         var json = System.Text.Json.JsonSerializer.Serialize(settings, SettingsJson.Default.AppSettings);
         var back = System.Text.Json.JsonSerializer.Deserialize(json, SettingsJson.Default.AppSettings)!;
-        Check(back.Hotkey == HotkeyPreset.CtrlAltW && back.FavoriteOperations.Single() == "image.to.webp" && back.Language == Language.Czech, "settings JSON round trip");
+        Check(back.Hotkey == HotkeyPreset.CtrlAltW && back.FavoriteOperations.Single() == "image.to.webp" && back.Language == Language.Arabic, "settings JSON round trip");
         Check(json.Contains("\"CtrlAltW\""), "enums stored as names");
         log.Add("ok settings json");
     }

@@ -14,7 +14,7 @@ public sealed class JobsWindow : Window
 
     public JobsWindow()
     {
-        Title = T("FileAction – průběh", "FileAction – progress");
+        Title = T("FileAction – progress", "FileAction – التقدّم");
         Width = 400;
         SizeToContent = SizeToContent.Height;
         CanResize = false;
@@ -106,7 +106,7 @@ public sealed class JobCard : Border
             if (_value > 0)
                 _fill.Width = _bar.Bounds.Width * _value;
         };
-        _buttons.Children.Add(Widgets.Button(T("Zrušit", "Cancel"), cancel));
+        _buttons.Children.Add(Widgets.Button(T("Cancel", "إلغاء"), cancel));
 
         var body = new StackPanel();
         body.Children.Add(head);
@@ -131,15 +131,15 @@ public sealed class JobCard : Border
         Full(warning is null ? Palette.Success : Palette.Error);
         _status.IsVisible = true;
         _status.Foreground = warning is null ? Palette.Muted : Palette.Error;
-        _status.Text = (warning ?? (outputs.Count == 1 ? T("Hotovo: ", "Done: ") + System.IO.Path.GetFileName(outputs[0]) : T($"Hotovo: {outputs.Count} výstupů", $"Done: {outputs.Count} outputs")))
+        _status.Text = (warning ?? (outputs.Count == 1 ? T("Done: ", "تم: ") + System.IO.Path.GetFileName(outputs[0]) : T($"Done: {outputs.Count} outputs", $"تم: {outputs.Count} ملف ناتج")))
             + (warning is null && note is not null ? Environment.NewLine + note : "");
         _buttons.Children.Clear();
         if (outputs.Count > 0)
         {
             var first = outputs[0];
             if (File.Exists(first) && outputs.Count == 1)
-                _buttons.Children.Add(Widgets.Button(T("Otevřít", "Open"), () => Desktop.Open(first), primary: true));
-            _buttons.Children.Add(Widgets.Button(T("Zobrazit ve složce", "Show in folder"), () => Desktop.Reveal(first)));
+                _buttons.Children.Add(Widgets.Button(T("Open", "فتح"), () => Desktop.Open(first), primary: true));
+            _buttons.Children.Add(Widgets.Button(T("Show in folder", "إظهار في المجلد"), () => Desktop.Reveal(first)));
         }
         if (warning is null)
             DispatcherTimer.RunOnce(() => _remove(this), TimeSpan.FromSeconds(8));
@@ -153,7 +153,7 @@ public sealed class JobCard : Border
         _status.Foreground = Palette.Error;
         _status.Text = message;
         _buttons.Children.Clear();
-        _buttons.Children.Add(Widgets.Button(T("Zavřít", "Close"), () => _remove(this)));
+        _buttons.Children.Add(Widgets.Button(T("Close", "إغلاق"), () => _remove(this)));
     }
 
     public void Cancelled()

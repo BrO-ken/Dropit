@@ -14,16 +14,16 @@ internal static class FileActions
 {
     public static IReadOnlyList<Operation> Build(AppSettings settings, Action save) =>
     [
-        new AppAction("action.copy", T("Kopírovat", "Copy"), Glyphs.Copy, items => CopyOrMoveAsync(items, move: false, settings, save), T("do složky…", "to folder…")),
-        new AppAction("action.move", T("Přesunout", "Move"), Glyphs.Move, items => CopyOrMoveAsync(items, move: true, settings, save), T("do složky…", "to folder…")),
-        new AppAction("action.path", T("Kopírovat cestu", "Copy path"), Glyphs.Link, CopyPathAsync),
-        new AppAction("action.terminal", T("Terminál", "Terminal"), Glyphs.Terminal, OpenTerminalAsync, T("otevřít zde", "open here")),
-        new AppAction("action.float", T("Plovoucí panel", "Float"), Glyphs.Pin, items =>
+        new AppAction("action.copy", T("Copy", "نسخ"), Glyphs.Copy, items => CopyOrMoveAsync(items, move: false, settings, save), T("to folder…", "إلى مجلد…")),
+        new AppAction("action.move", T("Move", "نقل"), Glyphs.Move, items => CopyOrMoveAsync(items, move: true, settings, save), T("to folder…", "إلى مجلد…")),
+        new AppAction("action.path", T("Copy path", "نسخ المسار"), Glyphs.Link, CopyPathAsync),
+        new AppAction("action.terminal", T("Terminal", "الطرفية"), Glyphs.Terminal, OpenTerminalAsync, T("open here", "افتح هنا")),
+        new AppAction("action.float", T("Float", "لوحة عائمة"), Glyphs.Pin, items =>
         {
             ShelfWindow.Open(items);
             return Task.CompletedTask;
-        }, T("odložit na později", "keep for later")),
-        new AppAction("action.share", T("Sdílet", "Share"), Glyphs.Share, ShareHelper.ShareAsync, "Windows",
+        }, T("keep for later", "للاحتفاظ به لاحقًا")),
+        new AppAction("action.share", T("Share", "مشاركة"), Glyphs.Share, ShareHelper.ShareAsync, "Windows",
             items => items.Count > 0 && items.All(i => !i.IsDirectory)),
     ];
 
@@ -31,7 +31,7 @@ internal static class FileActions
     {
         var dialog = new Microsoft.Win32.OpenFolderDialog
         {
-            Title = move ? T("Kam přesunout?", "Move to…") : T("Kam zkopírovat?", "Copy to…"),
+            Title = move ? T("Move to…", "نقل إلى…") : T("Copy to…", "نسخ إلى…"),
             InitialDirectory = (move ? settings.LastMoveFolder : settings.LastCopyFolder)
                 ?? Path.GetDirectoryName(items[0].Path.TrimEnd('\\', '/')) ?? "",
         };
@@ -118,7 +118,7 @@ internal static class FileActions
                 Thread.Sleep(50);
             }
         }
-        Notifications.Show(T("Cesta zkopírována", "Path copied"), items.Count == 1 ? items[0].Path : Items(items.Count));
+        Notifications.Show(T("Path copied", "تم نسخ المسار"), items.Count == 1 ? items[0].Path : Items(items.Count));
         return Task.CompletedTask;
     }
 

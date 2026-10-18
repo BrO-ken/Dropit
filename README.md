@@ -1,6 +1,6 @@
 # FileAction
 
-🇬🇧 **English** · 🇨🇿 [Čeština](README.cs.md)
+🇬🇧 **English** · 🇸🇦 [العربية](README.ar.md)
 
 **Click-free file conversion for Windows (and Linux).** Grab a file, tap a key while dragging, and drop it on a format in a radial wheel. Everything runs locally; your files never leave your PC.
 
@@ -80,7 +80,7 @@ FileAction handles images, PDFs, spreadsheets, subtitles and archives on its own
 
 Download `FileAction-Setup-x.y.z.exe` from [Releases](../../releases), or from the artifacts of the latest [GitHub Actions](../../actions) run. The installer (under 50 MB) doesn't need admin rights. A portable `.zip` is available too.
 
-The app speaks English and Czech and comes in light and dark mode; both follow your Windows settings, and the language can be switched in Settings.
+The app speaks English and Arabic and comes in light and dark mode; both follow your Windows settings, and the language can be switched in Settings. Arabic is laid out right to left.
 
 On first launch FileAction adds itself to startup and to the File Explorer context menu (both can be turned off in Settings). It then lives in the notification area next to the clock.
 
@@ -119,7 +119,7 @@ dotnet publish src/FileAction.App -c Release -r win-x64 --self-contained -o publ
 publish\FileAction.exe
 ```
 
-`FileAction.exe --self-test <folder>` builds every window offscreen and saves PNG previews in both languages (used by CI).
+`FileAction.exe --self-test <folder>` builds every window offscreen and saves PNG previews in both languages, including right-to-left layouts (used by CI).
 
 ### Releasing
 
@@ -133,7 +133,7 @@ The same run builds the Linux tarball, installs the AUR package on Arch Linux to
 src/FileAction.Core     conversions and tools (cross-platform library, also tested on Linux)
   Backends/             ImageMagick, FFmpeg, Pandoc, LibreOffice, PDF, spreadsheets, subtitles, archives
   Operations/Catalog.cs every slice on the Convert and Tools wheels
-  Loc.cs                English / Czech strings
+  Loc.cs                English / Arabic strings
 src/FileAction.Linux    the Linux app (Avalonia): drop zone, wheel, CLI, file manager integration
 src/FileAction.App      the Windows app (WPF)
   Input/GlobalInput.cs  global mouse and keyboard hooks (the “drag + tap” gesture)

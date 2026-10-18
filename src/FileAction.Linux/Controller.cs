@@ -77,7 +77,7 @@ public sealed class Controller
             }
             Remember(op, parameters);
 
-            var title = op.Wheel == WheelKind.Convert && op.Label.ToUpperInvariant() == op.Label ? T($"Převod na {op.Label}", $"Convert to {op.Label}") : op.Label;
+            var title = op.Wheel == WheelKind.Convert && op.Label.ToUpperInvariant() == op.Label ? T($"Convert to {op.Label}", $"تحويل إلى {op.Label}") : op.Label;
             await TrackAsync(title, async ct =>
             {
                 var context = new OperationContext

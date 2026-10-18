@@ -88,7 +88,7 @@ internal sealed class Updater
         var target = Path.Combine(Path.GetTempPath(), $"FileAction-Setup-{update.Version}-{Guid.NewGuid():N}.exe");
         try
         {
-            Notifications.Show(T("Stahuji aktualizaci…", "Downloading the update…"), $"FileAction {update.Version}");
+            Notifications.Show(T("Downloading the update…", "جارٍ تنزيل التحديث…"), $"FileAction {update.Version}");
             using (var response = await Http.GetAsync(update.InstallerUrl, HttpCompletionOption.ResponseHeadersRead))
             {
                 response.EnsureSuccessStatusCode();
@@ -100,11 +100,11 @@ internal sealed class Updater
             // Never run a release whose checksum GitHub did not publish: without one there is nothing
             // to check the download against, and the installer runs silently.
             if (update.InstallerSha256 is not { } expected || !IsSha256Hex(expected))
-                throw new InvalidOperationException(T("Vydání nemá publikovaný SHA-256, instalace byla odmítnuta.", "The release has no published SHA-256, so the update was refused."));
+                throw new InvalidOperationException(T("The release has no published SHA-256, so the update was refused.", "لا يحتوي الإصدار على قيمة SHA-256 منشورة، لذلك رُفض التحديث."));
             await using var file = File.OpenRead(target);
             var actual = Convert.ToHexString(await SHA256.HashDataAsync(file)).ToLowerInvariant();
             if (!CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(actual), Encoding.ASCII.GetBytes(expected)))
-                throw new InvalidOperationException(T("Stažený instalátor nesouhlasí s otiskem z GitHubu.", "The downloaded installer doesn't match the checksum published on GitHub."));
+                throw new InvalidOperationException(T("The downloaded installer doesn't match the checksum published on GitHub.", "لا يطابق المثبِّت المنزَّل المجموع الاختباري المنشور على GitHub."));
 
             // The installer closes this app, installs over it and starts the new version (see installer\FileAction.iss).
             Process.Start(new ProcessStartInfo(target, "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS") { UseShellExecute = true });
@@ -115,7 +115,7 @@ internal sealed class Updater
             Installing = false;
             Changed?.Invoke();
             OutputPaths.TryDelete(target);
-            Notifications.Show(T("Aktualizace se nepovedla", "Update failed"), ex.Message, error: true);
+            Notifications.Show(T("Update failed", "فشل التحديث"), ex.Message, error: true);
         }
     }
 

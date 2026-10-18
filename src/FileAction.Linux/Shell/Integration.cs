@@ -56,8 +56,9 @@ public static class Integration
         Type=Application
         Name=FileAction
         GenericName=File converter
+        GenericName[ar]=محوّل ملفات
         Comment=Convert files by dropping them on a wheel
-        Comment[cs]=Převod souborů puštěním na kolo
+        Comment[ar]=تحويل الملفات بإفلاتها على عجلة
         Exec={command} %F
         Icon=fileaction
         Terminal=false
@@ -99,7 +100,7 @@ public static class Integration
                 if (File.Exists(path))
                 {
                     File.Delete(path);
-                    yield return T($"Odebráno: {name}", $"Removed: {name}");
+                    yield return T($"Removed: {name}", $"تمت الإزالة: {name}");
                 }
                 continue;
             }
@@ -107,12 +108,11 @@ public static class Integration
             File.WriteAllText(path, content);
             if (executable)
                 File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
-            yield return T($"Přidáno: {name} → {path}", $"Added: {name} → {path}");
+            yield return T($"Added: {name} → {path}", $"تمت الإضافة: {name} إلى {path}");
         }
         if (install)
         {
-            yield return T("V Nautilu je položka v nabídce Skripty → FileAction. Thunar: Upravit → Vlastní akce, příkaz: ",
-                "In Nautilus the item is under Scripts → FileAction. Thunar: Edit → Configure custom actions, command: ") + $"{command} %F";
+            yield return T("In Nautilus the item is under Scripts → FileAction. Thunar: Edit → Configure custom actions, command: ", "في Nautilus يوجد العنصر ضمن Scripts ← FileAction. وفي Thunar: Edit ← Configure custom actions، الأمر: ") + $"{command} %F";
         }
     }
 }

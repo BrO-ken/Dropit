@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using FileAction.Core;
 
 namespace FileAction.App.UI;
 
@@ -33,9 +34,13 @@ internal static class Controls
         Margin = new Thickness(2, 26, 0, 8),
     };
 
-    /// <summary>A rounded card with a title/description on the left and a control on the right.</summary>
+    /// <summary>A rounded card with a title/description on the leading edge and a control on the trailing one.</summary>
     public static Border Card(string title, string? description, UIElement? control, UIElement? below = null, string? glyph = null)
     {
+        // Dock the sides explicitly instead of leaning on DockPanel's implicit mirroring, so the
+        // icon always sits on the reading edge: left in English, right in Arabic.
+        var iconSide = Loc.IsRtl ? Dock.Right : Dock.Left;
+        var controlSide = Loc.IsRtl ? Dock.Left : Dock.Right;
         var left = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         left.Children.Add(Text(title, 14, FontWeights.Normal));
         if (!string.IsNullOrEmpty(description))
@@ -57,14 +62,14 @@ internal static class Controls
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 16, 0),
             };
-            DockPanel.SetDock(icon, Dock.Left);
+            DockPanel.SetDock(icon, iconSide);
             row.Children.Add(icon);
         }
         if (control is FrameworkElement fe)
         {
             fe.VerticalAlignment = VerticalAlignment.Center;
             fe.Margin = new Thickness(16, 0, 0, 0);
-            DockPanel.SetDock(fe, Dock.Right);
+            DockPanel.SetDock(fe, controlSide);
             row.Children.Add(fe);
         }
         row.Children.Add(left);
@@ -131,10 +136,11 @@ internal static class Controls
         };
     }
 
-    /// <summary>Windows 11 toggle switch.</summary>
+    /// <summary>Windows 11 toggle switch; in Arabic the knob travels right to left.</summary>
     public static FrameworkElement Toggle(bool value, Action<bool> changed)
     {
-        var knob = new Ellipse { Width = 12, Height = 12, HorizontalAlignment = HorizontalAlignment.Left };
+        var rtl = Loc.IsRtl;
+        var knob = new Ellipse { Width = 12, Height = 12, HorizontalAlignment = rtl ? HorizontalAlignment.Right : HorizontalAlignment.Left };
         var track = new Border
         {
             Width = 40,
@@ -152,7 +158,10 @@ internal static class Controls
             track.Background = on ? Theme.AccentGradient : Brushes.Transparent;
             track.BorderBrush = on ? Brushes.Transparent : Theme.Muted;
             knob.Fill = on ? Brushes.White : Theme.Muted;
-            var x = on ? 23.0 : 3.0;
+            // Right-aligned knob already sits at the far end, so travel is negative.
+            var x = rtl
+                ? (on ? -23.0 : -3.0)
+                : (on ? 23.0 : 3.0);
             if (animate)
                 translate.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(x, TimeSpan.FromMilliseconds(120)) { EasingFunction = new CubicEase() });
             else
@@ -168,12 +177,13 @@ internal static class Controls
         return track;
     }
 
-    /// <summary>A slim slider with an accent-filled track and a round thumb.</summary>
+    /// <summary>A slim slider with an accent-filled track and a round thumb; fills from the right in Arabic.</summary>
     public static FrameworkElement Slider(int min, int max, int value, Action<int> changed, Action committed)
     {
         const double width = 200;
-        var label = new TextBlock { Width = 40, FontSize = 13, Foreground = Theme.Text, TextAlignment = TextAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
-        var fill = new Border { Height = 4, CornerRadius = new CornerRadius(2), Background = Theme.AccentGradient, HorizontalAlignment = HorizontalAlignment.Left };
+        var rtl = Loc.IsRtl;
+        var label = new TextBlock { Width = 40, FontSize = 13, Foreground = Theme.Text, TextAlignment = rtl ? TextAlignment.Left : TextAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
+        var fill = new Border { Height = 4, CornerRadius = new CornerRadius(2), Background = Theme.AccentGradient, HorizontalAlignment = rtl ? HorizontalAlignment.Right : HorizontalAlignment.Left };
         var thumb = new Ellipse
         {
             Width = 18,
@@ -181,7 +191,7 @@ internal static class Controls
             Fill = Brushes.White,
             Stroke = Theme.PanelBorder,
             StrokeThickness = 1,
-            HorizontalAlignment = HorizontalAlignment.Left,
+            HorizontalAlignment = rtl ? HorizontalAlignment.Right : HorizontalAlignment.Left,
             Effect = Theme.Shadow(6),
         };
         var surface = new Grid { Width = width, Height = 24, Background = Brushes.Transparent, Cursor = Cursors.Hand };
@@ -194,12 +204,14 @@ internal static class Controls
         {
             var t = (current - min) / (double)(max - min);
             fill.Width = Math.Max(0, t * width);
-            thumb.Margin = new Thickness(t * (width - 18), 0, 0, 0);
+            var travel = t * (width - 18);
+            thumb.Margin = rtl ? new Thickness(0, 0, travel, 0) : new Thickness(travel, 0, 0, 0);
             label.Text = current.ToString();
         }
         void SetFrom(Point p)
         {
-            var t = Math.Clamp((p.X - 9) / (width - 18), 0, 1);
+            var raw = (p.X - 9) / (width - 18);
+            var t = Math.Clamp(rtl ? 1 - raw : raw, 0, 1);
             var v = (int)Math.Round(min + t * (max - min));
             if (v == current)
                 return;
@@ -258,7 +270,7 @@ internal static class Controls
             Padding = new Thickness(14, 6, 14, 7),
             Cursor = Cursors.Hand,
             Child = content,
-            HorizontalAlignment = HorizontalAlignment.Left,
+            HorizontalAlignment = Loc.IsRtl ? HorizontalAlignment.Right : HorizontalAlignment.Left,
         };
         button.MouseEnter += (_, _) => button.Opacity = 0.88;
         button.MouseLeave += (_, _) => button.Opacity = 1;

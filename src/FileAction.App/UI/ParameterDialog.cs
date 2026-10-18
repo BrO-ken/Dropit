@@ -13,6 +13,7 @@ internal sealed class ParameterDialog : Window
 
     public ParameterDialog(Operation op, IReadOnlyList<FileItem> items)
     {
+        Direction.Apply(this);
         Title = op.Label;
         SizeToContent = SizeToContent.WidthAndHeight;
         ResizeMode = ResizeMode.NoResize;
@@ -54,9 +55,9 @@ internal sealed class ParameterDialog : Window
                 stack.Children.Add(new TextBlock { Text = p.Hint, Opacity = 0.65, FontSize = 11.5, Margin = new Thickness(0, 3, 0, 0) });
         }
 
-        var ok = Controls.Button(T("Spustit", "Run"), () => DialogResult = true, primary: true);
+        var ok = Controls.Button(T("Run", "تشغيل"), () => DialogResult = true, primary: true);
         ok.Margin = new Thickness(0, 0, 8, 0);
-        var cancel = Controls.Button(T("Zrušit", "Cancel"), () => DialogResult = false);
+        var cancel = Controls.Button(T("Cancel", "إلغاء"), () => DialogResult = false);
         KeyDown += (_, e) =>
         {
             if (e.Key == Key.Enter)

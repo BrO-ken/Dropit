@@ -18,7 +18,7 @@ internal sealed class OcrOperation : Operation
     private static bool? _available;
 
     public OcrOperation()
-        : base("tools.ocr", WheelKind.Tools, T("Text z obrázku", "Extract text"), Glyphs.Text, "OCR")
+        : base("tools.ocr", WheelKind.Tools, T("Extract text", "استخراج النص"), Glyphs.Text, "OCR")
     {
     }
 
@@ -50,9 +50,7 @@ internal sealed class OcrOperation : Operation
     {
         var engine = OcrEngine.TryCreateFromUserProfileLanguages()
             ?? OcrEngine.AvailableRecognizerLanguages.Select(OcrEngine.TryCreateFromLanguage).FirstOrDefault(e => e is not null)
-            ?? throw new ConversionException(T(
-                "Windows nemá nainstalované rozpoznávání textu. Přidejte jazyk v Nastavení → Čas a jazyk → Jazyk a oblast.",
-                "Windows has no text recognition installed. Add a language in Settings → Time & language → Language & region."));
+            ?? throw new ConversionException(T("Windows has no text recognition installed. Add a language in Settings → Time & language → Language & region.", "لا يتوفّر في Windows أي تعرّف على النصوص. أضف لغة من الإعدادات ← الوقت واللغة ← اللغة والمنطقة."));
 
         var outputs = new List<string>();
         var all = new StringBuilder();
@@ -77,9 +75,9 @@ internal sealed class OcrOperation : Operation
                     ctx.Progress.Report((i + (p + 1.0) / pages.Count) / items.Count);
                 }
                 if (text.Length == 0)
-                    throw new ConversionException(T("V souboru se nenašel žádný text.", "No text was found in the file."));
+                    throw new ConversionException(T("No text was found in the file.", "لم يُعثر على أي نص في الملف."));
 
-                outputs.Add(await OutputPaths.ProduceAsync(ctx.OutputDirFor(item.Path), $"{item.BaseName} ({T("text", "text")})", "txt",
+                outputs.Add(await OutputPaths.ProduceAsync(ctx.OutputDirFor(item.Path), $"{item.BaseName} ({T("text", "نص")})", "txt",
                     tmp => File.WriteAllTextAsync(tmp, text.ToString(), new UTF8Encoding(false), ctx.CancellationToken)));
                 if (all.Length > 0)
                     all.Append("\n\n");
@@ -92,7 +90,7 @@ internal sealed class OcrOperation : Operation
         }
 
         CopyToClipboard?.Invoke(all.ToString());
-        return new OperationResult(outputs, Note: T("Text je i ve schránce.", "The text is also on the clipboard."));
+        return new OperationResult(outputs, Note: T("The text is also on the clipboard.", "النص موجود أيضًا في الحافظة."));
     }
 
     private static IReadOnlyList<string> PagesOf(FileItem item, string temp, OperationContext ctx)

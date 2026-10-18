@@ -525,7 +525,7 @@ public sealed class WheelWindow : Window
     {
         if (_items.Count > 0 && !_repeat)
         {
-            var format = _items[0].IsDirectory ? T("SLOŽKA", "FOLDER") : Formats.Display(_items[0].Format);
+            var format = _items[0].IsDirectory ? T("FOLDER", "مجلد") : Formats.Display(_items[0].Format);
             return new Border
             {
                 CornerRadius = new CornerRadius(6),
@@ -556,9 +556,9 @@ public sealed class WheelWindow : Window
 
     public static string WheelName(WheelKind wheel) => wheel switch
     {
-        WheelKind.Convert => T("Převést", "Convert"),
-        WheelKind.Tools => T("Nástroje", "Tools"),
-        _ => T("Akce", "Actions"),
+        WheelKind.Convert => T("Convert", "تحويل"),
+        WheelKind.Tools => T("Tools", "أدوات"),
+        _ => T("Actions", "إجراءات"),
     };
 
     private void SetHighlight(int index)
@@ -597,9 +597,9 @@ public sealed class WheelWindow : Window
         if (_repeat)
         {
             var last = _ops.Count > 0 ? _ops[0] : null;
-            _title.Text = _highlight >= 0 && last is not null ? last.Label : T("Zopakovat", "Repeat");
-            _detail.Text = last is null ? T("Poslední akce se sem nehodí", "Last action doesn't fit")
-                : _highlight >= 0 ? T("poslední akce", "last action") : last.Label;
+            _title.Text = _highlight >= 0 && last is not null ? last.Label : T("Repeat", "تكرار");
+            _detail.Text = last is null ? T("Last action doesn't fit", "آخر إجراء غير متاح")
+                : _highlight >= 0 ? T("last action", "آخر إجراء") : last.Label;
             return;
         }
         if (_highlight >= 0 && _highlight < _ops.Count)
@@ -610,8 +610,8 @@ public sealed class WheelWindow : Window
             return;
         }
         _title.Text = _items.Count == 0 ? "FileAction" : WheelName(_wheel);
-        _detail.Text = _items.Count == 0 ? T("Přetáhněte sem soubory", "Drop files here")
-            : _ops.Count == 0 ? T("Pro tento výběr nic není", "Nothing for this selection")
+        _detail.Text = _items.Count == 0 ? T("Drop files here", "أفلت الملفات هنا")
+            : _ops.Count == 0 ? T("Nothing for this selection", "لا يوجد شيء لهذا التحديد")
             : Describe();
     }
 

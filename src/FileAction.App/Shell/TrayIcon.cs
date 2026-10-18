@@ -16,15 +16,15 @@ internal sealed class TrayIcon : IDisposable
     {
         var stream = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/Assets/FileAction.ico"))!.Stream;
         var menu = new Forms.ContextMenuStrip();
-        menu.Items.Add(T("Kolo pro schránku", "Wheel for the clipboard"), null, (_, _) => openClipboard());
-        menu.Items.Add(T("Nastavení…", "Settings…"), null, (_, _) => openSettings());
-        menu.Items.Add(T("Prázdný plovoucí panel", "Empty floating shelf"), null, (_, _) => openShelf());
-        menu.Items.Add(T("Jak to funguje", "How it works"), null, (_, _) => showHelp());
-        _pause = new Forms.ToolStripMenuItem(T("Pozastavit gesta", "Pause gestures")) { Checked = paused, CheckOnClick = true };
+        menu.Items.Add(T("Wheel for the clipboard", "عجلة الحافظة"), null, (_, _) => openClipboard());
+        menu.Items.Add(T("Settings…", "الإعدادات…"), null, (_, _) => openSettings());
+        menu.Items.Add(T("Empty floating shelf", "إفراغ اللوحة العائمة"), null, (_, _) => openShelf());
+        menu.Items.Add(T("How it works", "كيف يعمل"), null, (_, _) => showHelp());
+        _pause = new Forms.ToolStripMenuItem(T("Pause gestures", "إيقاف الإيماءات مؤقتًا")) { Checked = paused, CheckOnClick = true };
         _pause.CheckedChanged += (_, _) => setPaused(_pause.Checked);
         menu.Items.Add(_pause);
         menu.Items.Add(new Forms.ToolStripSeparator());
-        menu.Items.Add(T("Ukončit", "Exit"), null, (_, _) => exit());
+        menu.Items.Add(T("Exit", "إنهاء"), null, (_, _) => exit());
 
         _icon = new Forms.NotifyIcon
         {
@@ -52,7 +52,7 @@ internal sealed class TrayIcon : IDisposable
     /// <summary>Adds "Update to x.y.z" at the top of the menu and announces it once.</summary>
     public void OfferUpdate(Version version, Action install)
     {
-        var text = T($"Aktualizovat na verzi {version}", $"Update to version {version}");
+        var text = T($"Update to version {version}", $"التحديث إلى الإصدار {version}");
         if (_update is null)
         {
             _update = new Forms.ToolStripMenuItem(text) { Font = new System.Drawing.Font(_icon.ContextMenuStrip!.Font, System.Drawing.FontStyle.Bold) };
@@ -60,8 +60,8 @@ internal sealed class TrayIcon : IDisposable
             _icon.ContextMenuStrip.Items.Insert(0, _update);
             _icon.ContextMenuStrip.Items.Insert(1, new Forms.ToolStripSeparator());
         }
-        Show(T("Je k dispozici nová verze", "A new version is available"),
-            T($"FileAction {version} – klikněte sem pro instalaci.", $"FileAction {version} – click here to install."), false);
+        Show(T("A new version is available", "يتوفّر إصدار جديد"),
+            T($"FileAction {version} – click here to install.", $"\u200FFileAction {version} – اضغط هنا للتثبيت."), false);
         _balloonClick = install;
     }
 

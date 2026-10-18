@@ -114,18 +114,18 @@ public sealed class AppSettings
 
     public static string WheelName(WheelKind wheel) => wheel switch
     {
-        WheelKind.Convert => T("Převést", "Convert"),
-        WheelKind.Tools => T("Nástroje", "Tools"),
-        _ => T("Akce", "Actions"),
+        WheelKind.Convert => T("Convert", "تحويل"),
+        WheelKind.Tools => T("Tools", "أدوات"),
+        _ => T("Actions", "إجراءات"),
     };
 
     public static string HotkeyName(HotkeyPreset preset) => preset switch
     {
-        HotkeyPreset.CtrlAltSpace => T("Ctrl + Alt + Mezerník", "Ctrl + Alt + Space"),
-        HotkeyPreset.CtrlShiftSpace => T("Ctrl + Shift + Mezerník", "Ctrl + Shift + Space"),
+        HotkeyPreset.CtrlAltSpace => T("Ctrl + Alt + Space", "Ctrl + Alt + Space"),
+        HotkeyPreset.CtrlShiftSpace => T("Ctrl + Shift + Space", "Ctrl + Shift + Space"),
         HotkeyPreset.CtrlAltF => "Ctrl + Alt + F",
         HotkeyPreset.CtrlAltW => "Ctrl + Alt + W",
-        _ => T("Vypnuto", "Off"),
+        _ => T("Off", "معطّل"),
     };
 }
 

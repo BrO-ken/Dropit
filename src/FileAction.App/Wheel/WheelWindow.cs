@@ -71,6 +71,7 @@ internal sealed class WheelWindow : Window
         OperationSource source,
         Action<Operation, IReadOnlyList<FileItem>> execute)
     {
+        Direction.Apply(this);
         Mode = mode;
         _wheel = wheel;
         _items = items ?? [];
@@ -332,7 +333,7 @@ internal sealed class WheelWindow : Window
                 }
                 catch (Exception ex)
                 {
-                    Shell.Notifications.Show(T("Stažení se nepovedlo", "Download failed"), ex.Message, error: true);
+                    Shell.Notifications.Show(T("Download failed", "فشل التنزيل"), ex.Message, error: true);
                     return;
                 }
                 Dispatch(op, content.Items);
@@ -616,7 +617,11 @@ internal sealed class WheelWindow : Window
     {
         // Slices that first download a tool are shown a little faded.
         var panel = new StackPanel { MaxWidth = 96, IsHitTestVisible = false, Opacity = op is Shell.NeedsToolOperation ? 0.6 : 1 };
-        var isFormat = op.Wheel == WheelKind.Convert && op.Label.Length <= 6 && op.Label.ToUpperInvariant() == op.Label;
+        // A format slice is an acronym ("JPG", "MP4"). Arabic labels have no upper case at all, so
+        // ToUpperInvariant() alone would call every Arabic label a format and render it huge and
+        // without an icon - require ASCII letters as well.
+        var isFormat = op.Wheel == WheelKind.Convert && op.Label.Length <= 6
+            && op.Label.All(char.IsAsciiLetterOrDigit) && op.Label.ToUpperInvariant() == op.Label;
         if (!isFormat)
         {
             panel.Children.Add(new TextBlock
@@ -769,10 +774,10 @@ internal sealed class WheelWindow : Window
         if (_repeat)
         {
             var last = _ops.Count > 0 ? _ops[0] : null;
-            _title.Text = _highlight >= 0 && last is not null ? last.Label : T("Zopakovat", "Repeat");
+            _title.Text = _highlight >= 0 && last is not null ? last.Label : T("Repeat", "تكرار");
             _detail.Text = last is null
-                ? T("Poslední akce se sem nehodí", "Last action doesn't fit")
-                : _highlight >= 0 ? T("poslední akce", "last action") : last.Label;
+                ? T("Last action doesn't fit", "آخر إجراء غير متاح")
+                : _highlight >= 0 ? T("last action", "آخر إجراء") : last.Label;
             return;
         }
         if (_highlight >= 0 && _highlight < _ops.Count)
@@ -784,9 +789,9 @@ internal sealed class WheelWindow : Window
         }
         _title.Text = AppSettings.WheelName(_wheel);
         if (_items.Count == 0)
-            _detail.Text = T("Přetáhněte sem soubor", "Drag a file here");
+            _detail.Text = T("Drag a file here", "اسحب ملفًا إلى هنا");
         else if (_ops.Count == 0)
-            _detail.Text = T("Pro tento výběr nic není", "Nothing for this selection");
+            _detail.Text = T("Nothing for this selection", "لا يوجد شيء لهذا التحديد");
         else
             _detail.Text = DescribeItems();
     }

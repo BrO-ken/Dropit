@@ -56,7 +56,7 @@ public static class OfficeBackend
         if (produced is null)
         {
             OutputPaths.TryDelete(outDir);
-            throw new ConversionException(T("LibreOffice soubor nepřevedl (je dokument v pořádku a nezamčený heslem?).", "LibreOffice could not convert the file (is it intact and not password-protected?)."));
+            throw new ConversionException(T("LibreOffice could not convert the file (is it intact and not password-protected?).", "لم يستطع LibreOffice تحويل الملف (هل هو سليم وغير محمي بكلمة مرور؟)."));
         }
         return produced;
     }

@@ -34,7 +34,7 @@ public static class ImageBackend
         "gif" => MagickFormat.Gif,
         "ico" => MagickFormat.Ico,
         "pdf" => MagickFormat.Pdf,
-        _ => throw new ConversionException(T($"Nepodporovaný obrázkový formát: {format}", $"Unsupported image format: {format}")),
+        _ => throw new ConversionException(T($"Unsupported image format: {format}", $"صيغة صورة غير مدعومة: {format}")),
     };
 
     private static void PrepareFor(MagickImage image, string format, int quality)

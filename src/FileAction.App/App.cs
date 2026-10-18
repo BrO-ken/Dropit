@@ -9,6 +9,7 @@ using FileAction.App.UI;
 using FileAction.App.Wheel;
 using FileAction.Core;
 using static FileAction.Core.Loc;
+using System.Globalization;
 
 namespace FileAction.App;
 
@@ -110,11 +111,11 @@ internal sealed class App : Application
         }
         else if (_args.Contains("--updated"))
         {
-            _tray.Show(T("FileAction je aktualizovaný", "FileAction was updated"), T($"Verze {Updater.Current}", $"Version {Updater.Current}"), false);
+            _tray.Show(T("FileAction was updated", "تم تحديث FileAction"), T($"Version {Updater.Current}", $"الإصدار {Updater.Current}"), false);
         }
         else if (!_args.Contains("--background"))
         {
-            _tray.Show(T("FileAction běží", "FileAction is running"), T("Chyťte soubor, během tažení ťukněte na Shift a pusťte ho na formát.", "Grab a file, tap Shift while dragging and drop it on a format."), false);
+            _tray.Show(T("FileAction is running", "FileAction قيد التشغيل"), T("Grab a file, tap Shift while dragging and drop it on a format.", "امسك ملفًا، واضغط Shift أثناء السحب، ثم أفلته على صيغة."), false);
         }
         HandleArgs(_args);
     }
@@ -157,6 +158,8 @@ internal sealed class App : Application
         {
             Loc.Current = language;
             _controller.Relocalize();
+            // Arabic is right to left: every window already open has to be re-flowed.
+            Direction.ApplyToOpenWindows();
             _tray?.Dispose();
             _tray = CreateTray();
         }
@@ -190,16 +193,14 @@ internal sealed class App : Application
             _settings.Save();
             SettingsWindow.RefreshIfOpen();
             var now = AppSettings.HotkeyName(preset);
-            Notifications.Show(T("Zkratka změněna", "Shortcut changed"),
-                T($"{taken} už používá jiná aplikace, FileAction teď používá {now}. Změnit ji můžete v nastavení.",
-                  $"{taken} is used by another app, so FileAction now uses {now}. You can change it in Settings."));
+            Notifications.Show(T("Shortcut changed", "تم تغيير الاختصار"),
+                T($"{taken} is used by another app, so FileAction now uses {now}. You can change it in Settings.", $"{taken} مستخدم من تطبيق آخر، لذا يستخدم FileAction الآن {now}. يمكنك تغييره في الإعدادات."));
             return;
         }
 
         _activeHotkey = HotkeyPreset.None;
-        Notifications.Show(T("Zkratka je obsazená", "Shortcut is taken"),
-            T("Všechny nabízené zkratky už používají jiné aplikace. Kolo otevřete tažením nebo z nabídky u hodin.",
-              "All offered shortcuts are used by other apps. Open the wheel by dragging or from the tray menu."), error: true);
+        Notifications.Show(T("Shortcut is taken", "الاختصار مستخدم بالفعل"),
+            T("All offered shortcuts are used by other apps. Open the wheel by dragging or from the tray menu.", "كل الاختصارات المعروضة مستخدمة من تطبيقات أخرى. افتح العجلة بالسحب أو من قائمة منطقة الإشعارات."), error: true);
     }
 
     private void SetPaused(bool paused)
@@ -216,23 +217,6 @@ internal sealed class App : Application
         var hotkey = AppSettings.HotkeyName(_settings.Hotkey);
         var text = T(
             $"""
-            1. Chyťte soubor myší (v Průzkumníku, na ploše, obrázek v prohlížeči, přílohu v Outlooku…).
-            2. Během tažení ťukněte na klávesu:
-                 {convert} – převést na jiný formát
-                 {tools} – nástroje (komprimovat, zmenšit, oříznout, spojit…)
-                 {actions} – akce (kopírovat, přesunout, cesta, terminál, plovoucí panel, sdílet)
-            3. Pusťte soubor na výseč kola. Do středu = zrušit.
-
-            Kolo zůstane otevřené, dokud soubor nepustíte; klávesu můžete pustit a další klávesou přepnout kolo.
-            Ťuknutí na stejnou klávesu znovu ukáže „zopakovat poslední akci“.
-
-            Bez myši: vyberte soubory v Průzkumníku (nebo zkopírujte soubor či snímek obrazovky) a stiskněte {hotkey}.
-            Šipky vyberou výseč, Enter potvrdí, Tab přepne kolo, Esc zavře.
-            Také přes pravé tlačítko → „FileAction…“.
-
-            Výsledek se uloží vedle původního souboru, originál zůstane beze změny.
-            """,
-            $"""
             1. Grab a file with the mouse (in File Explorer, on the desktop, an image in your browser, an Outlook attachment…).
             2. While dragging, tap a key:
                  {convert} – convert to another format
@@ -248,15 +232,32 @@ internal sealed class App : Application
             Also via right-click → “FileAction…”.
 
             The result is saved next to the original file; the original stays untouched.
+            """,
+            $"""
+            ‏1. امسك ملفًا بالفأرة (في مستكشف الملفات، أو على سطح المكتب، أو صورة في متصفحك، أو مرفق في Outlook…).
+            2. أثناء السحب، اضغط على مفتاح:
+                 {convert} – التحويل إلى صيغة أخرى
+                 {tools} – الأدوات (ضغط، تصغير، قصّ، دمج…)
+                 {actions} – الإجراءات (نسخ، نقل، مسار، طرفية، لوحة عائمة، مشاركة)
+            3. أفلت الملف على إحدى شرائح العجلة. والإفلات في المنتصف يُلغي العملية.
+
+            تبقى العجلة مفتوحة حتى تُفلت الملف؛ ويمكنك ترك المفتاح والضغط على مفتاح آخر لتبديل العجلات.
+            واضغط المفتاح نفسه مجددًا لتكرار آخر إجراء.
+
+            بلا فأرة: حدّد ملفات في مستكشف الملفات (أو انسخ ملفًا أو لقطة شاشة) واضغط {hotkey}.
+            تختار الأسهم الشريحة، ويشغّلها Enter، ويبدّل Tab العجلات، ويغلق Esc.
+            وأيضًا عبر زر الفأرة الأيمن ← «FileAction…».
+
+            يُحفظ الناتج بجوار الملف الأصلي؛ ويبقى الملف الأصلي كما هو دون تغيير.
             """);
-        MessageBox.Show(text, T("Jak FileAction funguje", "How FileAction works"), MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageBox.Show(text, T("How FileAction works", "كيف يعمل FileAction"), MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void OnUnhandled(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         Log(e.Exception);
         e.Handled = true;
-        Notifications.Show(T("FileAction – chyba", "FileAction – error"), e.Exception.Message, error: true);
+        Notifications.Show(T("FileAction – error", "FileAction – خطأ"), e.Exception.Message, error: true);
     }
 
     public static void Log(Exception ex)
@@ -264,7 +265,7 @@ internal sealed class App : Application
         try
         {
             Directory.CreateDirectory(AppSettings.Folder);
-            File.AppendAllText(Path.Combine(AppSettings.Folder, "log.txt"), $"[{DateTime.Now:s}] {ex}{Environment.NewLine}");
+            File.AppendAllText(Path.Combine(AppSettings.Folder, "log.txt"), $"[{DateTime.Now.ToString("s", CultureInfo.InvariantCulture)}] {ex}{Environment.NewLine}");
         }
         catch (IOException)
         {

@@ -4,6 +4,7 @@ using PdfSharp.Pdf.IO;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 using static FileAction.Core.Loc;
+using System.Globalization;
 
 namespace FileAction.Core.Backends;
 
@@ -33,15 +34,15 @@ public static class PdfBackend
             return [single];
         }
 
-        var folder = OutputPaths.UniqueDirectory(dir, $"{item.BaseName} ({T("stránky", "pages")})");
+        var folder = OutputPaths.UniqueDirectory(dir, $"{item.BaseName} ({T("pages", "صفحة")})");
         Directory.CreateDirectory(folder);
-        var digits = count.ToString().Length;
+        var digits = count.ToString(CultureInfo.InvariantCulture).Length;
         try
         {
             for (var i = 0; i < count; i++)
             {
                 ctx.CancellationToken.ThrowIfCancellationRequested();
-                var path = Path.Combine(folder, $"{item.BaseName} - {(i + 1).ToString().PadLeft(digits, '0')}.{format}");
+                var path = Path.Combine(folder, $"{item.BaseName} - {(i + 1).ToString(CultureInfo.InvariantCulture).PadLeft(digits, '0')}.{format}");
                 await Task.Run(() => SavePage(path, bytes, i, format, options, ctx.Settings.JpegQuality), ctx.CancellationToken).ConfigureAwait(false);
                 progress.Report((i + 1.0) / count);
             }
@@ -96,7 +97,7 @@ public static class PdfBackend
             sb.Append(markdown ? ToMarkdownParagraphs(text) : text);
         }
         if (sb.Length == 0)
-            throw new ConversionException(T("PDF neobsahuje žádný text (nejspíš je to sken). Zkuste převod na JPG/PNG.", "The PDF contains no text (probably a scan). Try converting it to JPG/PNG."));
+            throw new ConversionException(T("The PDF contains no text (probably a scan). Try converting it to JPG/PNG.", "لا يحتوي ملف PDF على نص (ربما يكون ممسوحًا ضوئيًا). جرّب تحويله إلى JPG/PNG."));
         return sb.ToString();
     }
 
@@ -171,7 +172,7 @@ public static class PdfBackend
     public static async Task<IEnumerable<string>> SplitAsync(FileItem item, OperationContext ctx, IProgress<double> progress)
     {
         var dir = ctx.OutputDirFor(item.Path);
-        var folder = OutputPaths.UniqueDirectory(dir, $"{item.BaseName} ({T("stránky", "pages")})");
+        var folder = OutputPaths.UniqueDirectory(dir, $"{item.BaseName} ({T("pages", "صفحة")})");
         Directory.CreateDirectory(folder);
         try
         {
@@ -179,13 +180,13 @@ public static class PdfBackend
             {
                 using var source = Open(item.Path, PdfDocumentOpenMode.Import);
                 var count = source.PageCount;
-                var digits = count.ToString().Length;
+                var digits = count.ToString(CultureInfo.InvariantCulture).Length;
                 for (var i = 0; i < count; i++)
                 {
                     ctx.CancellationToken.ThrowIfCancellationRequested();
                     using var single = new PdfSharp.Pdf.PdfDocument();
                     single.AddPage(source.Pages[i]);
-                    single.Save(Path.Combine(folder, $"{item.BaseName} - {(i + 1).ToString().PadLeft(digits, '0')}.pdf"));
+                    single.Save(Path.Combine(folder, $"{item.BaseName} - {(i + 1).ToString(CultureInfo.InvariantCulture).PadLeft(digits, '0')}.pdf"));
                     progress.Report((i + 1.0) / count);
                 }
             }, ctx.CancellationToken).ConfigureAwait(false);
@@ -224,7 +225,7 @@ public static class PdfBackend
         }
         catch (PdfReaderException ex)
         {
-            throw new ConversionException(T($"PDF {Path.GetFileName(path)} nelze otevřít: {ex.Message}", $"Cannot open PDF {Path.GetFileName(path)}: {ex.Message}"), ex);
+            throw new ConversionException(T($"Cannot open PDF {Path.GetFileName(path)}: {ex.Message}", $"تعذّر فتح ملف PDF {Path.GetFileName(path)}: {ex.Message}"), ex);
         }
     }
 }

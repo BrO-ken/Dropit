@@ -22,7 +22,7 @@ internal sealed class JobsWindow : Window
 
     public JobsWindow()
     {
-        Title = T("FileAction – průběh", "FileAction – progress");
+        Title = T("FileAction – progress", "FileAction – التقدّم");
         WindowStyle = WindowStyle.None;
         AllowsTransparency = true;
         Background = Brushes.Transparent;
@@ -41,6 +41,7 @@ internal sealed class JobsWindow : Window
 
     public JobCard Add(string title, string detail, Action cancel, string? iconPath = null)
     {
+        Direction.Apply(this);
         Theme.Refresh();
         var card = new JobCard(title, detail, iconPath, cancel, Remove);
         _cards.Children.Insert(0, card);
@@ -70,7 +71,8 @@ internal sealed class JobCard : Border
     /// <summary>Off in the self-test, where offscreen rendering doesn't advance animations.</summary>
     public static bool Animate { get; set; } = true;
 
-    private readonly Border _fill = new() { CornerRadius = new CornerRadius(2), Background = Theme.AccentGradient, HorizontalAlignment = HorizontalAlignment.Left, Width = 0 };
+    // The fill grows from the reading edge, so it starts on the right in Arabic.
+    private readonly Border _fill = new() { CornerRadius = new CornerRadius(2), Background = Theme.AccentGradient, HorizontalAlignment = Loc.IsRtl ? HorizontalAlignment.Right : HorizontalAlignment.Left, Width = 0 };
     private readonly Grid _bar = new() { Height = 4, Margin = new Thickness(0, 10, 0, 0) };
     private readonly TextBlock _status;
     private readonly StackPanel _buttons;
@@ -105,7 +107,7 @@ internal sealed class JobCard : Border
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        var badge = new Grid { Width = 18, Height = 18, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, -4, -4), Visibility = Visibility.Collapsed };
+        var badge = new Grid { Width = 18, Height = 18, HorizontalAlignment = Loc.IsRtl ? HorizontalAlignment.Left : HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, -4, -4), Visibility = Visibility.Collapsed };
         badge.Children.Add(new Ellipse { Fill = Theme.Success, Stroke = Theme.Panel, StrokeThickness = 2 });
         badge.Children.Add(_badge);
         icon.Children.Add(badge);
@@ -118,8 +120,8 @@ internal sealed class JobCard : Border
         _bar.SizeChanged += (_, _) => _fill.Width = _bar.ActualWidth * _value;
         StartPulse();
         _status = new TextBlock { Foreground = Theme.Muted, FontSize = 12, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0), Visibility = Visibility.Collapsed };
-        _buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 10, 0, 0) };
-        _buttons.Children.Add(UI.Controls.Button(T("Zrušit", "Cancel"), () => _cancel()));
+        _buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = Loc.IsRtl ? HorizontalAlignment.Right : HorizontalAlignment.Left, Margin = new Thickness(0, 10, 0, 0) };
+        _buttons.Children.Add(UI.Controls.Button(T("Cancel", "إلغاء"), () => _cancel()));
 
         var close = new TextBlock
         {
@@ -130,7 +132,7 @@ internal sealed class JobCard : Border
             Padding = new Thickness(6),
             Cursor = Cursors.Hand,
             VerticalAlignment = VerticalAlignment.Top,
-            ToolTip = T("Zavřít", "Close"),
+            ToolTip = T("Close", "إغلاق"),
         };
         close.MouseLeftButtonUp += (_, _) =>
         {
@@ -140,7 +142,7 @@ internal sealed class JobCard : Border
         };
 
         var head = new DockPanel();
-        DockPanel.SetDock(close, Dock.Right);
+        DockPanel.SetDock(close, Loc.IsRtl ? Dock.Left : Dock.Right);
         head.Children.Add(close);
         head.Children.Add(titleText);
 
@@ -152,7 +154,7 @@ internal sealed class JobCard : Border
         body.Children.Add(_buttons);
 
         var row = new DockPanel();
-        DockPanel.SetDock(icon, Dock.Left);
+        DockPanel.SetDock(icon, Loc.IsRtl ? Dock.Right : Dock.Left);
         row.Children.Add(icon);
         row.Children.Add(body);
         Child = row;
@@ -193,6 +195,8 @@ internal sealed class JobCard : Border
             _fill.Opacity = 1;
         }
         _value = Math.Clamp(value, 0, 1);
+        // Re-read the direction each tick: the language can be switched while jobs are running.
+        _fill.HorizontalAlignment = Loc.IsRtl ? HorizontalAlignment.Right : HorizontalAlignment.Left;
         _fill.Width = _bar.ActualWidth * _value;
     }
 
@@ -205,9 +209,9 @@ internal sealed class JobCard : Border
         _status.Foreground = warning is null ? Theme.Muted : Theme.Error;
         _status.Text = warning ?? outputs.Count switch
         {
-            0 => note ?? T("Hotovo", "Done"),
-            1 => T("Hotovo: ", "Done: ") + System.IO.Path.GetFileName(outputs[0]),
-            _ => T($"Hotovo: {outputs.Count} výstupů", $"Done: {outputs.Count} outputs"),
+            0 => note ?? T("Done", "تم"),
+            1 => T("Done: ", "تم: ") + System.IO.Path.GetFileName(outputs[0]),
+            _ => T($"Done: {outputs.Count} outputs", $"تم: {outputs.Count} ملف ناتج"),
         };
         if (warning is null && note is not null && outputs.Count > 0)
             _status.Text += Environment.NewLine + note;
@@ -216,8 +220,8 @@ internal sealed class JobCard : Border
         {
             var first = outputs[0];
             if (File.Exists(first) && outputs.Count == 1)
-                AddButton(UI.Controls.Button(T("Otevřít", "Open"), () => Shell(first), primary: true));
-            AddButton(UI.Controls.Button(T("Zobrazit ve složce", "Show in folder"), () => Reveal(first), glyph: Glyphs.Folder));
+                AddButton(UI.Controls.Button(T("Open", "فتح"), () => Shell(first), primary: true));
+            AddButton(UI.Controls.Button(T("Show in folder", "إظهار في المجلد"), () => Reveal(first), glyph: Glyphs.Folder));
         }
         if (warning is null)
             CloseLater(TimeSpan.FromSeconds(8));
@@ -232,7 +236,7 @@ internal sealed class JobCard : Border
         _status.Foreground = Theme.Error;
         _status.Text = message;
         _buttons.Children.Clear();
-        AddButton(UI.Controls.Button(T("Kopírovat chybu", "Copy error"), () =>
+        AddButton(UI.Controls.Button(T("Copy error", "نسخ الخطأ"), () =>
         {
             try
             {

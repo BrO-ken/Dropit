@@ -9,6 +9,7 @@ using FileAction.App.Shell;
 using FileAction.Core;
 using ComDataObject = System.Runtime.InteropServices.ComTypes.IDataObject;
 using IDataObject = System.Windows.IDataObject;
+using System.Globalization;
 
 namespace FileAction.App.Wheel;
 
@@ -184,7 +185,7 @@ internal sealed record DropContent(IReadOnlyList<FileItem> Items, Func<Task>? Pr
         var hasPng = data.GetDataPresent("PNG");
         if (!hasPng && !data.GetDataPresent(DataFormats.Bitmap))
             return null;
-        var name = T("Obrázek", "Image") + $" {DateTime.Now:yyyy-MM-dd HHmmss}.png";
+        var name = T("Image", "صورة") + $" {DateTime.Now.ToString("yyyy-MM-dd HHmmss", CultureInfo.InvariantCulture)}.png";
         if (!materialize)
             return new FileItem(Path.Combine(Path.GetTempPath(), name));
         var target = Target(name);
@@ -238,7 +239,7 @@ internal sealed record DropContent(IReadOnlyList<FileItem> Items, Func<Task>? Pr
                 response.EnsureSuccessStatusCode();
                 // A dropped link must not be able to fill the disk, whatever the server's Content-Length claims.
                 if (response.Content.Headers.ContentLength is { } declared && declared > MaxDownloadBytes)
-                    throw new IOException(T($"Soubor je větší než {MaxDownloadBytes / 1024 / 1024} MB.", $"The file is larger than {MaxDownloadBytes / 1024 / 1024} MB."));
+                    throw new IOException(T($"The file is larger than {MaxDownloadBytes / 1024 / 1024} MB.", $"الملف أكبر من {MaxDownloadBytes / 1024 / 1024} ميغابايت."));
                 await using var input = await response.Content.ReadAsStreamAsync();
                 await using var output = File.Create(target);
                 var buffer = new byte[81920];
@@ -248,7 +249,7 @@ internal sealed record DropContent(IReadOnlyList<FileItem> Items, Func<Task>? Pr
                 {
                     done += read;
                     if (done > MaxDownloadBytes)
-                        throw new IOException(T($"Soubor je větší než {MaxDownloadBytes / 1024 / 1024} MB.", $"The file is larger than {MaxDownloadBytes / 1024 / 1024} MB."));
+                        throw new IOException(T($"The file is larger than {MaxDownloadBytes / 1024 / 1024} MB.", $"الملف أكبر من {MaxDownloadBytes / 1024 / 1024} ميغابايت."));
                     await output.WriteAsync(buffer.AsMemory(0, read));
                 }
             }
@@ -284,7 +285,7 @@ internal sealed record DropContent(IReadOnlyList<FileItem> Items, Func<Task>? Pr
         return target;
     }
 
-    private static string T(string cs, string en) => Loc.T(cs, en);
+    private static string T(string en, string ar) => Loc.T(en, ar);
 
     private static string Target(string name) =>
         OutputPaths.Unique(KnownFolders.Incoming, Path.GetFileNameWithoutExtension(name), Path.GetExtension(name).TrimStart('.'));

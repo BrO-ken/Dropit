@@ -66,7 +66,7 @@ public static class ProcessRunner
         }
         catch (Exception ex)
         {
-            throw new ConversionException(T($"Nelze spustit {Path.GetFileName(exe)}: {ex.Message}", $"Cannot start {Path.GetFileName(exe)}: {ex.Message}"), ex);
+            throw new ConversionException(T($"Cannot start {Path.GetFileName(exe)}: {ex.Message}", $"تعذّر تشغيل {Path.GetFileName(exe)}: {ex.Message}"), ex);
         }
         process.StandardInput.Close();
         process.BeginOutputReadLine();
@@ -94,7 +94,7 @@ public static class ProcessRunner
             lock (stderrTail)
                 tail = string.Join(Environment.NewLine, stderrTail.Where(l => !string.IsNullOrWhiteSpace(l)).TakeLast(5));
             throw new ConversionException(
-                T($"{Path.GetFileNameWithoutExtension(exe)} skončil s chybou {process.ExitCode}.", $"{Path.GetFileNameWithoutExtension(exe)} failed with exit code {process.ExitCode}.")
+                T($"{Path.GetFileNameWithoutExtension(exe)} failed with exit code {process.ExitCode}.", $"انتهى {Path.GetFileNameWithoutExtension(exe)} برمز خطأ {process.ExitCode}.")
                 + (tail.Length > 0 ? Environment.NewLine + tail : ""));
         }
         lock (stdout)

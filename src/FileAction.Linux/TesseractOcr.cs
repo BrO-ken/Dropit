@@ -12,7 +12,7 @@ public sealed class TesseractOcr : Operation
     private readonly LinuxSettings _settings;
 
     public TesseractOcr(LinuxSettings settings)
-        : base("tools.ocr", WheelKind.Tools, T("Text z obrázku", "Extract text"), Glyphs.Text, "OCR")
+        : base("tools.ocr", WheelKind.Tools, T("Extract text", "استخراج النص"), Glyphs.Text, "OCR")
     {
         _settings = settings;
     }
@@ -24,7 +24,7 @@ public sealed class TesseractOcr : Operation
 
     public override async Task<OperationResult> ExecuteAsync(IReadOnlyList<FileItem> items, OperationContext ctx)
     {
-        var exe = Exe.Value ?? throw new ConversionException(T("Chybí tesseract (sudo pacman -S tesseract tesseract-data-eng).", "tesseract is missing (sudo pacman -S tesseract tesseract-data-eng)."));
+        var exe = Exe.Value ?? throw new ConversionException(T("tesseract is missing (sudo pacman -S tesseract tesseract-data-eng).", $"\u200Ftesseract غير مثبّت (sudo pacman -S tesseract tesseract-data-eng)."));
         var languages = await LanguagesAsync(exe, ctx.CancellationToken);
         var outputs = new List<string>();
         for (var i = 0; i < items.Count; i++)
@@ -56,8 +56,8 @@ public sealed class TesseractOcr : Operation
                     ctx.Progress.Report((i + (p + 1.0) / pages.Count) / items.Count);
                 }
                 if (text.Length == 0)
-                    throw new ConversionException(T("V souboru se nenašel žádný text.", "No text was found in the file."));
-                outputs.Add(await OutputPaths.ProduceAsync(ctx.OutputDirFor(item.Path), $"{item.BaseName} ({T("text", "text")})", "txt",
+                    throw new ConversionException(T("No text was found in the file.", "لم يُعثر على أي نص في الملف."));
+                outputs.Add(await OutputPaths.ProduceAsync(ctx.OutputDirFor(item.Path), $"{item.BaseName} ({T("text", "نص")})", "txt",
                     tmp => File.WriteAllTextAsync(tmp, text.ToString(), new UTF8Encoding(false), ctx.CancellationToken)));
             }
             finally
@@ -77,7 +77,7 @@ public sealed class TesseractOcr : Operation
         {
             var list = await ProcessRunner.RunAsync(exe, ["--list-langs"], ct);
             var installed = list.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToHashSet();
-            var wanted = new[] { Loc.Current == Language.Czech ? "ces" : "", "eng" }.Where(l => l.Length > 0 && installed.Contains(l));
+            var wanted = new[] { Loc.Current == Language.Arabic ? "ara" : "", "eng" }.Where(l => l.Length > 0 && installed.Contains(l));
             return string.Join('+', wanted);
         }
         catch (ConversionException)

@@ -29,7 +29,7 @@ public static class OutputPaths
         {
             await produce(temp).ConfigureAwait(false);
             if (!File.Exists(temp))
-                throw new ConversionException(T("Převod nevytvořil žádný výstup.", "The conversion produced no output."));
+                throw new ConversionException(T("The conversion produced no output.", "لم يُنتج التحويل أي ملف."));
             var final = Unique(dir, baseName, ext);
             File.Move(temp, final);
             return final;

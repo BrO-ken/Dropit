@@ -32,8 +32,9 @@ internal sealed class SettingsWindow : Window
         _settings = settings;
         _tools = tools;
         _changed = changed;
+        Direction.Apply(this);
         Theme.Refresh();
-        Title = T("FileAction – nastavení", "FileAction – settings");
+        Title = T("FileAction – settings", "FileAction – الإعدادات");
         Width = 680;
         Height = 820;
         MinWidth = 520;
@@ -89,54 +90,55 @@ internal sealed class SettingsWindow : Window
         var root = new StackPanel { Margin = new Thickness(32, 28, 32, 32), MaxWidth = 720 };
         root.Children.Add(Header());
 
-        root.Children.Add(SectionHeader(T("Jazyk", "Language")));
-        root.Children.Add(Card(T("Jazyk aplikace", "App language"), null,
+        root.Children.Add(SectionHeader(T("Language", "اللغة")));
+        root.Children.Add(Card(T("App language", "لغة التطبيق"), null,
             Segmented<Core.Language?>(
-                [(T("Podle Windows", "Windows"), null), ("Čeština", Core.Language.Czech), ("English", Core.Language.English)],
+                [(T("Windows", "لغة Windows"), null),
+                 (Core.Loc.NativeName(Core.Language.Arabic), Core.Language.Arabic),
+                 (Core.Loc.NativeName(Core.Language.English), Core.Language.English)],
                 _settings.Language,
                 value =>
                 {
                     _settings.Language = value;
                     Save();
                     // Rebuild the window in the new language.
-                    Title = T("FileAction – nastavení", "FileAction – settings");
+                    Title = T("FileAction – settings", "FileAction – الإعدادات");
                     Rebuild();
                 }),
             glyph: "\uE774"));
 
-        root.Children.Add(SectionHeader(T("Gesto", "Gesture")));
+        root.Children.Add(SectionHeader(T("Gesture", "الإيماءة")));
         root.Children.Add(Card(
-            T("Chyťte soubor a během tažení ťukněte na klávesu", "Grab a file and tap a key while dragging"),
-            T("Otevře se kolo; soubor pusťte na výseč. Do středu = zrušit.", "A wheel opens; drop the file on a slice. Drop in the middle to cancel."),
+            T("Grab a file and tap a key while dragging", "امسك ملفًا واضغط مفتاحًا أثناء السحب"),
+            T("A wheel opens; drop the file on a slice. Drop in the middle to cancel.", "تُفتح عجلة؛ أفلت الملف على إحدى الشرائح. والإفلات في المنتصف يُلغي العملية."),
             null, glyph: Glyphs.Extract));
         foreach (var (wheel, description) in new[]
                  {
-                     (WheelKind.Convert, T("Převod na jiný formát", "Convert to another format")),
-                     (WheelKind.Tools, T("Komprimovat, zmenšit, oříznout, spojit…", "Compress, shrink, trim, merge…")),
-                     (WheelKind.Actions, T("Kopírovat, přesunout, cesta, terminál, sdílet…", "Copy, move, path, terminal, share…")),
+                     (WheelKind.Convert, T("Convert to another format", "التحويل إلى صيغة أخرى")),
+                     (WheelKind.Tools, T("Compress, shrink, trim, merge…", "ضغط، تصغير، قصّ، دمج…")),
+                     (WheelKind.Actions, T("Copy, move, path, terminal, share…", "نسخ، نقل، مسار، طرفية، مشاركة…")),
                  })
         {
             root.Children.Add(Card(AppSettings.WheelName(wheel), description, KeyChooser(wheel)));
         }
-        root.Children.Add(Card(T("Upravit kolo", "Customize wheels"),
-            T("Oblíbené výseče jako první, nepoužívané skrýt. Ťuknutí na stejnou klávesu znovu (nebo R) zopakuje poslední akci.",
-              "Favourite slices first, hide the ones you never use. Tap the same key again (or press R) to repeat the last action."),
-            Button(T("Upravit…", "Customize…"), () =>
+        root.Children.Add(Card(T("Customize wheels", "تخصيص العجلات"),
+            T("Favourite slices first, hide the ones you never use. Tap the same key again (or press R) to repeat the last action.", "ضع الشرائح المفضّلة في الأعلى، وأخفِ التي لا تستخدمها. اضغط المفتاح نفسه مجددًا (أو اضغط R) لتكرار آخر إجراء."),
+            Button(T("Customize…", "تخصيص…"), () =>
             {
                 if (Operations is not null)
                     WheelEditorWindow.ShowSingle(_settings, Operations(), _changed);
             }, glyph: "\uE70F"),
             glyph: "\uE8EE"));
-        root.Children.Add(Card(T("Pozastavit gesta", "Pause gestures"), T("Kolo se při tažení neotevře.", "The wheel won’t open while dragging."),
+        root.Children.Add(Card(T("Pause gestures", "إيقاف الإيماءات مؤقتًا"), T("The wheel won’t open while dragging.", "لن تُفتح العجلة أثناء السحب."),
             Toggle(_settings.Paused, v =>
             {
                 _settings.Paused = v;
                 Save();
             })));
 
-        root.Children.Add(SectionHeader(T("Klávesnice", "Keyboard")));
-        root.Children.Add(Card(T("Zkratka pro výběr v Průzkumníku", "Shortcut for the File Explorer selection"),
-            T("Šipky vyberou výseč, Enter potvrdí, Tab přepne kolo, Esc zavře.", "Arrows pick a slice, Enter runs it, Tab switches wheels, Esc closes."),
+        root.Children.Add(SectionHeader(T("Keyboard", "لوحة المفاتيح")));
+        root.Children.Add(Card(T("Shortcut for the File Explorer selection", "اختصار التحديد في مستكشف الملفات"),
+            T("Arrows pick a slice, Enter runs it, Tab switches wheels, Esc closes.", "تختار الأسهم الشريحة، ويشغّلها Enter، ويبدّل Tab العجلات، ويغلق Esc."),
             null,
             below: Wrap(Segmented(
                 Enum.GetValues<HotkeyPreset>().Where(p => p != HotkeyPreset.None).Append(HotkeyPreset.None)
@@ -149,17 +151,17 @@ internal sealed class SettingsWindow : Window
                 })),
             glyph: "\uE765"));
 
-        root.Children.Add(SectionHeader(T("Výsledky", "Results")));
+        root.Children.Add(SectionHeader(T("Results", "النتائج")));
         var folderLine = Text(_settings.OutputDirectory ?? "", 12, brush: Theme.Muted, wrap: false);
         var folderRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 12, 0, 0) };
-        folderRow.Children.Add(Button(T("Vybrat složku…", "Choose folder…"), PickFolder, glyph: Glyphs.Folder));
+        folderRow.Children.Add(Button(T("Choose folder…", "اختر مجلدًا…"), PickFolder, glyph: Glyphs.Folder));
         folderLine.Margin = new Thickness(12, 0, 0, 0);
         folderLine.VerticalAlignment = VerticalAlignment.Center;
         folderRow.Children.Add(folderLine);
         var toFolder = !string.IsNullOrWhiteSpace(_settings.OutputDirectory);
         var below = new StackPanel();
         below.Children.Add(Wrap(Segmented(
-            [(T("Vedle originálu", "Next to the original"), false), (T("Do složky", "To a folder"), true)],
+            [(T("Next to the original", "بجانب الملف الأصلي"), false), (T("To a folder", "إلى مجلد"), true)],
             toFolder,
             value =>
             {
@@ -176,43 +178,42 @@ internal sealed class SettingsWindow : Window
             })));
         if (toFolder)
             below.Children.Add(folderRow);
-        root.Children.Add(Card(T("Kam ukládat", "Save results"), T("Originál zůstává vždy beze změny.", "The original file is never changed."), null, below, Glyphs.Folder));
-        root.Children.Add(Card(T("Po dokončení ukázat ve složce", "Show in folder when done"), null,
+        root.Children.Add(Card(T("Save results", "حفظ النتائج"), T("The original file is never changed.", "لا يُعدَّل الملف الأصلي أبدًا."), null, below, Glyphs.Folder));
+        root.Children.Add(Card(T("Show in folder when done", "الإظهار في المجلد عند الانتهاء"), null,
             Toggle(_settings.RevealResult, v =>
             {
                 _settings.RevealResult = v;
                 Save();
             })));
 
-        root.Children.Add(SectionHeader(T("Kvalita", "Quality")));
-        root.Children.Add(Card(T("JPG, WebP a AVIF", "JPG, WebP and AVIF"), T("Kvalita při převodu obrázků", "Quality when converting images"),
+        root.Children.Add(SectionHeader(T("Quality", "الجودة")));
+        root.Children.Add(Card(T("JPG, WebP and AVIF", "JPG وWebP وAVIF"), T("Quality when converting images", "الجودة عند تحويل الصور"),
             Slider(50, 100, _settings.Quality.JpegQuality, v => _settings.Quality.JpegQuality = v, Save), glyph: Glyphs.Photo));
-        root.Children.Add(Card(T("Komprimovat", "Compress"), T("Kvalita nástroje Komprimovat", "Quality of the Compress tool"),
+        root.Children.Add(Card(T("Compress", "ضغط"), T("Quality of the Compress tool", "جودة أداة الضغط"),
             Slider(30, 95, _settings.Quality.CompressQuality, v => _settings.Quality.CompressQuality = v, Save), glyph: Glyphs.Shrink));
-        root.Children.Add(Card(T("PDF na obrázky", "PDF to images"), T("Rozlišení v DPI", "Resolution in DPI"),
+        root.Children.Add(Card(T("PDF to images", "PDF إلى صور"), T("Resolution in DPI", "الدقة بوحدة DPI"),
             Slider(72, 600, _settings.Quality.PdfDpi, v => _settings.Quality.PdfDpi = v, Save), glyph: Glyphs.Page));
 
-        root.Children.Add(SectionHeader(T("Systém", "System")));
-        root.Children.Add(Card(T("Spouštět po přihlášení", "Start when I sign in"), null,
+        root.Children.Add(SectionHeader(T("System", "النظام")));
+        root.Children.Add(Card(T("Start when I sign in", "التشغيل عند تسجيل الدخول"), null,
             Toggle(ShellIntegration.IsAutostartEnabled, v => Apply(() => ShellIntegration.SetAutostart(v))), glyph: "\uE7E8"));
-        root.Children.Add(Card(T("Kontextová nabídka Průzkumníka", "File Explorer context menu"), T("Položka „FileAction…“ po kliknutí pravým tlačítkem", "A “FileAction…” item on right-click"),
+        root.Children.Add(Card(T("File Explorer context menu", "قائمة سياق مستكشف الملفات"), T("A “FileAction…” item on right-click", "عنصر «FileAction…» في زر الفأرة الأيمن"),
             Toggle(ShellIntegration.IsContextMenuEnabled, v => Apply(() => ShellIntegration.SetContextMenu(v))), glyph: "\uE8A7"));
 
-        root.Children.Add(SectionHeader(T("Aktualizace", "Updates")));
+        root.Children.Add(SectionHeader(T("Updates", "التحديثات")));
         root.Children.Add(UpdateCard());
-        root.Children.Add(Card(T("Kontrolovat aktualizace automaticky", "Check for updates automatically"),
-            T("Občas se zeptá GitHubu na nejnovější vydání. O vašich souborech se nic neodesílá.", "Now and then asks GitHub for the latest release. Nothing about your files is sent."),
+        root.Children.Add(Card(T("Check for updates automatically", "التحقق من التحديثات تلقائيًا"),
+            T("Now and then asks GitHub for the latest release. Nothing about your files is sent.", "يسأل GitHub بين الحين والآخر عن أحدث إصدار. ولا يُرسل أي شيء عن ملفاتك."),
             Toggle(_settings.CheckForUpdates, v =>
             {
                 _settings.CheckForUpdates = v;
                 Save();
             })));
 
-        root.Children.Add(SectionHeader(T("Pomocné programy", "Helper programs")));
-        root.Children.Add(Card(T("Co zvládá FileAction sám", "Built in"),
-            T("Obrázky, PDF, tabulky, titulky a archivy. Audio a video potřebují FFmpeg, dokumenty Pandoc a soubory Office LibreOffice.",
-              "Images, PDFs, spreadsheets, subtitles and archives. Audio and video need FFmpeg, documents need Pandoc and Office files need LibreOffice."),
-            Button(T("Zkontrolovat znovu", "Check again"), () =>
+        root.Children.Add(SectionHeader(T("Helper programs", "البرامج المساعدة")));
+        root.Children.Add(Card(T("Built in", "مدمج"),
+            T("Images, PDFs, spreadsheets, subtitles and archives. Audio and video need FFmpeg, documents need Pandoc and Office files need LibreOffice.", "الصور وملفات PDF وجداول البيانات والترجمات والأرشيفات. أما الصوت والفيديو فيحتاجان FFmpeg، والمستندات تحتاج Pandoc، وملفات Office تحتاج LibreOffice."),
+            Button(T("Check again", "تحقّق مجددًا"), () =>
             {
                 _tools.Refresh();
                 Rebuild();
@@ -222,7 +223,7 @@ internal sealed class SettingsWindow : Window
             root.Children.Add(ToolCard(tool));
 
         var version = typeof(SettingsWindow).Assembly.GetName().Version;
-        var footer = Text($"FileAction {version?.ToString(3)} · " + T("vše běží lokálně, soubory se nikam neodesílají.", "everything runs locally, files never leave your PC."), 12, brush: Theme.Muted);
+        var footer = Text($"FileAction {version?.ToString(3)} · " + T("everything runs locally, files never leave your PC.", "كل شيء يعمل محليًا، ولا تغادر ملفاتك جهازك."), 12, brush: Theme.Muted);
         footer.Margin = new Thickness(2, 24, 0, 0);
         root.Children.Add(footer);
 
@@ -251,13 +252,13 @@ internal sealed class SettingsWindow : Window
         var title = Text("FileAction", 28, FontWeights.SemiBold);
         title.FontFamily = Theme.DisplayFont;
         text.Children.Add(title);
-        text.Children.Add(Text(T("Chyťte soubor, ťukněte na klávesu, pusťte ho na formát.", "Grab a file, tap a key, drop it on a format."), 13.5, brush: Theme.Muted));
+        text.Children.Add(Text(T("Grab a file, tap a key, drop it on a format.", "امسك ملفًا، واضغط مفتاحًا، وأفلته على صيغة."), 13.5, brush: Theme.Muted));
         panel.Children.Add(text);
         return panel;
     }
 
     private Border KeyChooser(WheelKind wheel) => Segmented(
-        [("Shift", ModifierKey.Shift), ("Ctrl", ModifierKey.Ctrl), ("Alt", ModifierKey.Alt), (T("Vyp.", "Off"), ModifierKey.None)],
+        [("Shift", ModifierKey.Shift), ("Ctrl", ModifierKey.Ctrl), ("Alt", ModifierKey.Alt), (T("Off", "معطّل"), ModifierKey.None)],
         _settings.KeyFor(wheel),
         key =>
         {
@@ -291,7 +292,7 @@ internal sealed class SettingsWindow : Window
 
     private void PickFolder()
     {
-        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = T("Výstupní složka", "Output folder") };
+        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = T("Output folder", "مجلد الإخراج") };
         if (dialog.ShowDialog(this) == true)
         {
             _settings.OutputDirectory = dialog.FolderName;
@@ -325,20 +326,20 @@ internal sealed class SettingsWindow : Window
         }
         else if (updater.Installing)
         {
-            status = T("Stahuji a instaluji…", "Downloading and installing…");
+            status = T("Downloading and installing…", "جارٍ التنزيل والتثبيت…");
         }
         else if (updater.Available is { } update)
         {
-            status = T($"K dispozici je verze {update.Version}.", $"Version {update.Version} is available.");
-            action = Button(Shell.Updater.IsInstalled ? T("Aktualizovat", "Update") : T("Stáhnout", "Download"),
+            status = T($"Version {update.Version} is available.", $"الإصدار {update.Version} متاح.");
+            action = Button(Shell.Updater.IsInstalled ? T("Update", "تحديث") : T("Download", "تنزيل"),
                 () => _ = updater.InstallAsync(update), primary: true, glyph: "\uE896");
         }
         else
         {
-            status = updater.LastError is not null ? T("Kontrola se nepovedla: ", "Check failed: ") + updater.LastError
-                : updater.LastChecked is { } at ? T($"Máte nejnovější verzi (kontrola {at:HH:mm}).", $"You're up to date (checked {at:HH:mm}).")
-                : T("Zatím nezkontrolováno.", "Not checked yet.");
-            action = Button(T("Zkontrolovat", "Check now"), async () =>
+            status = updater.LastError is not null ? T("Check failed: ", "فشل التحقق: ") + updater.LastError
+                : updater.LastChecked is { } at ? T($"You're up to date (checked {at:HH:mm}).", $"أنت تستخدم أحدث إصدار (تم التحقق في {at:HH:mm}).")
+                : T("Not checked yet.", "لم يتم التحقق بعد.");
+            action = Button(T("Check now", "تحقّق الآن"), async () =>
             {
                 await updater.CheckAsync();
                 Rebuild();
@@ -352,12 +353,12 @@ internal sealed class SettingsWindow : Window
         var path = _tools.Find(tool);
         var description = path ?? tool switch
         {
-            ExternalTool.Ffmpeg => T("Audio a video", "Audio and video"),
-            ExternalTool.Pandoc => T("Dokumenty (DOCX, Markdown, EPUB…)", "Documents (DOCX, Markdown, EPUB…)"),
-            _ => T("DOC, PPTX, ODS a převod do PDF", "DOC, PPTX, ODS and conversion to PDF"),
+            ExternalTool.Ffmpeg => T("Audio and video", "الصوت والفيديو"),
+            ExternalTool.Pandoc => T("Documents (DOCX, Markdown, EPUB…)", "المستندات (DOCX، Markdown، EPUB…)"),
+            _ => T("DOC, PPTX, ODS and conversion to PDF", "DOC وPPTX وODS والتحويل إلى PDF"),
         };
         var right = new StackPanel { Orientation = Orientation.Horizontal };
-        right.Children.Add(Badge(path is null ? T("chybí", "missing") : T("nalezeno", "found"), path is not null));
+        right.Children.Add(Badge(path is null ? T("missing", "مفقود") : T("found", "موجود"), path is not null));
         if (path is null)
         {
             var id = tool switch
@@ -367,17 +368,17 @@ internal sealed class SettingsWindow : Window
                 _ => "TheDocumentFoundation.LibreOffice",
             };
             var install = Shell.ToolInstaller.CanInstall(tool) && DownloadTool is not null
-                ? Button(T($"Stáhnout ({Shell.ToolInstaller.DownloadSize(tool)})", $"Download ({Shell.ToolInstaller.DownloadSize(tool)})"), async () =>
+                ? Button(T($"Download ({Shell.ToolInstaller.DownloadSize(tool)})", $"تنزيل ({Shell.ToolInstaller.DownloadSize(tool)})"), async () =>
                 {
                     if (await DownloadTool(tool))
                         Rebuild();
                 }, primary: true, glyph: "\uE896")
-                : Button(T("Nainstalovat", "Install"), () =>
+                : Button(T("Install", "تثبيت"), () =>
             {
                 try
                 {
                     Process.Start(new ProcessStartInfo("cmd.exe",
-                        $"/c winget install -e --id {id} --accept-source-agreements --accept-package-agreements & echo. & echo {T("Hotovo. Ve FileAction kliknete na Zkontrolovat znovu.", "Done. Click Check again in FileAction.")} & pause")
+                        $"/c winget install -e --id {id} --accept-source-agreements --accept-package-agreements & echo. & echo {T("Done. Click Check again in FileAction.", "تم. اضغط «تحقّق مجددًا» في FileAction.")} & pause")
                     { UseShellExecute = true });
                 }
                 catch (System.ComponentModel.Win32Exception ex)

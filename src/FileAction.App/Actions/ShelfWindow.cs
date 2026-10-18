@@ -25,8 +25,9 @@ internal sealed class ShelfWindow : Window
 
     private ShelfWindow()
     {
+        Direction.Apply(this);
         Theme.Refresh();
-        Title = T("Plovoucí panel", "Floating shelf");
+        Title = T("Floating shelf", "لوحة عائمة");
         WindowStyle = WindowStyle.None;
         AllowsTransparency = true;
         Background = Brushes.Transparent;
@@ -40,10 +41,10 @@ internal sealed class ShelfWindow : Window
         FontFamily = Theme.UiFont;
 
         _header = new TextBlock { Foreground = Theme.Text, FontFamily = Theme.DisplayFont, FontWeight = FontWeights.SemiBold, FontSize = 14, VerticalAlignment = VerticalAlignment.Center };
-        var close = IconButton("\uE711", T("Zavřít", "Close"));
+        var close = IconButton("\uE711", T("Close", "إغلاق"));
         close.Click += (_, _) => Close();
         var header = new DockPanel { Margin = new Thickness(14, 10, 8, 8), Background = Brushes.Transparent, Cursor = Cursors.SizeAll };
-        DockPanel.SetDock(close, Dock.Right);
+        DockPanel.SetDock(close, Loc.IsRtl ? Dock.Left : Dock.Right);
         header.Children.Add(close);
         header.Children.Add(new TextBlock { Text = Glyphs.Pin, FontFamily = Theme.Icons, Foreground = Theme.Accent, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center });
         header.Children.Add(_header);
@@ -85,7 +86,7 @@ internal sealed class ShelfWindow : Window
 
         var hint = new TextBlock
         {
-            Text = T("Táhněte položky ven, nebo sem přidejte další.", "Drag items out, or drop more here."),
+            Text = T("Drag items out, or drop more here.", "اسحب العناصر إلى الخارج، أو أفلت المزيد هنا."),
             Foreground = Theme.Muted,
             FontSize = 11,
             TextWrapping = TextWrapping.Wrap,
@@ -144,7 +145,7 @@ internal sealed class ShelfWindow : Window
     private void UpdateHeader()
     {
         var n = _paths.Count;
-        _header.Text = n == 0 ? T("Prázdný panel", "Empty shelf") : Items(n);
+        _header.Text = n == 0 ? T("Empty shelf", "اللوحة فارغة") : Items(n);
     }
 
     private void OnListMouseMove(object sender, MouseEventArgs e)

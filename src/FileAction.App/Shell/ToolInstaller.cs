@@ -34,12 +34,12 @@ internal static class ToolInstaller
         {
             ExternalTool.Ffmpeg => (FfmpegUrl, Normalize(await Http.GetStringAsync(FfmpegUrl + ".sha256", ct)), "ffmpeg.exe"),
             ExternalTool.Pandoc => await PandocAssetAsync(ct),
-            _ => throw new ConversionException(T("Tento nástroj se instaluje zvlášť.", "This tool is installed separately.")),
+            _ => throw new ConversionException(T("This tool is installed separately.", "تُثبَّت هذه الأداة بشكل منفصل.")),
         };
 
         // Nothing is unpacked without a published SHA-256 to check the download against.
         if (!IsSha256Hex(sha256))
-            throw new ConversionException(T($"Autoři programu nezveřejnili kontrolní součet {ToolLocator.DisplayName(tool)}, instalace byla odmítnuta.", $"The authors published no SHA-256 for {ToolLocator.DisplayName(tool)}, so the install was refused."));
+            throw new ConversionException(T($"The authors published no SHA-256 for {ToolLocator.DisplayName(tool)}, so the install was refused.", $"لم ينشر مطوّرو {ToolLocator.DisplayName(tool)} أي قيمة SHA-256، لذلك رُفض التثبيت."));
 
         Directory.CreateDirectory(ToolLocator.DownloadFolder);
         var archive = Path.Combine(Path.GetTempPath(), $"fileaction-{exeName}-{Guid.NewGuid():N}{Path.GetExtension(new Uri(url).AbsolutePath)}");
@@ -49,7 +49,7 @@ internal static class ToolInstaller
             await using var file = File.OpenRead(archive);
             var actual = Convert.ToHexString(await SHA256.HashDataAsync(file, ct)).ToLowerInvariant();
             if (!CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(actual), Encoding.ASCII.GetBytes(sha256)))
-                throw new ConversionException(T("Stažený soubor nesouhlasí s otiskem zveřejněným autory.", "The download doesn't match the checksum published by its authors."));
+                throw new ConversionException(T("The download doesn't match the checksum published by its authors.", "لا يطابق الملف المنزَّل المجموع الاختباري المنشور من مطوّريه."));
             await Task.Run(() => ExtractExe(archive, exeName, ct), ct);
         }
         finally
@@ -81,7 +81,7 @@ internal static class ToolInstaller
             var sha = digest is not null && digest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase) ? digest[7..].ToLowerInvariant() : "";
             return (asset.GetProperty("browser_download_url").GetString()!, sha, "pandoc.exe");
         }
-        throw new ConversionException(T("Nenašel jsem Pandoc pro Windows.", "Couldn't find Pandoc for Windows."));
+        throw new ConversionException(T("Couldn't find Pandoc for Windows.", "تعذّر العثور على Pandoc لنظام Windows."));
     }
 
     private static async Task DownloadAsync(string url, string target, IProgress<double> progress, CancellationToken ct)
@@ -112,7 +112,7 @@ internal static class ToolInstaller
         {
             var entry = archive.Entries.FirstOrDefault(e => !e.IsDirectory && e.Key is { } key
                 && Path.GetFileName(key.Replace('\\', '/')).Equals(exeName, StringComparison.OrdinalIgnoreCase))
-                ?? throw new ConversionException(T($"V archivu chybí {exeName}.", $"{exeName} is missing from the archive."));
+                ?? throw new ConversionException(T($"{exeName} is missing from the archive.", $"{exeName} غير موجود في الأرشيف."));
             ct.ThrowIfCancellationRequested();
             entry.WriteToFile(temp, new ExtractionOptions { Overwrite = true });
         }
@@ -131,7 +131,7 @@ internal static class ToolInstaller
 internal sealed class NeedsToolOperation : Operation
 {
     public NeedsToolOperation(Operation inner, IReadOnlyList<ExternalTool> missing)
-        : base(inner.Id, inner.Wheel, inner.Label, inner.Glyph, T("stáhnout ", "get ") + string.Join(" + ", missing.Select(ToolLocator.DisplayName)))
+        : base(inner.Id, inner.Wheel, inner.Label, inner.Glyph, T("get ", "تنزيل ") + string.Join(" + ", missing.Select(ToolLocator.DisplayName)))
     {
         Inner = inner;
         Missing = missing;

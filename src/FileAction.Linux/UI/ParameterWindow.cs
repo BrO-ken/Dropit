@@ -37,8 +37,8 @@ public sealed class ParameterWindow : Window
                 stack.Children.Add(new TextBlock { Text = p.Hint, Opacity = 0.65, FontSize = 11.5 });
         }
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 16, 0, 0) };
-        buttons.Children.Add(Widgets.Button(T("Spustit", "Run"), () => Finish(true), primary: true));
-        buttons.Children.Add(Widgets.Button(T("Zrušit", "Cancel"), () => Finish(false)));
+        buttons.Children.Add(Widgets.Button(T("Run", "تشغيل"), () => Finish(true), primary: true));
+        buttons.Children.Add(Widgets.Button(T("Cancel", "إلغاء"), () => Finish(false)));
         stack.Children.Add(buttons);
         Content = stack;
         KeyDown += (_, e) =>
