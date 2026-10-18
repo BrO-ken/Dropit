@@ -178,27 +178,33 @@ private static void TestCaptionClosesWindow(List<string> log)
     }
 
     /// <summary>
-    /// A button inside the WindowChrome caption strip is only clickable if it opts out of the chrome's
-    /// hit testing. Raising MouseLeftButtonUp proves nothing about that: RaiseEvent invokes the
-    /// handlers directly and skips hit testing altogether, so a button a real mouse can never reach
-    /// still passes. Assert the property itself, and that the target is not a sliver.
+    /// A button that sits in the window header is only clickable if the chrome has no caption strip
+    /// competing for the hit test over that area. Raising MouseLeftButtonUp proves nothing about it:
+    /// RaiseEvent invokes the handlers directly and skips hit testing altogether.
     /// </summary>
     private static bool Closes<T>(Func<T> make) where T : Window
     {
         var window = make();
         window.Show();
         window.UpdateLayout();
-        var close = UI.Chrome.FindCloseButton(window);
-        var reachable = close is not null
-            && System.Windows.Shell.WindowChrome.GetIsHitTestVisibleInChrome(close)
-            && close.ActualWidth >= 32
-            && close.ActualHeight >= 28;
-        if (!reachable)
+
+        // A non-zero CaptionHeight makes WindowChrome claim the hit test over that strip for the drag
+        // gesture. The buttons sit in the header, so any caption height at all can make them
+        // unreachable - this is the check that actually protects them.
+        var chrome = System.Windows.Shell.WindowChrome.GetWindowChrome(window);
+        if (chrome is null || chrome.CaptionHeight != 0)
         {
             window.Close();
             return false;
         }
-        close!.RaiseEvent(new System.Windows.Input.MouseButtonEventArgs(
+
+        var close = UI.Chrome.FindCloseButton(window);
+        if (close is null || close.ActualWidth < 32 || close.ActualHeight < 28)
+        {
+            window.Close();
+            return false;
+        }
+        close.RaiseEvent(new System.Windows.Input.MouseButtonEventArgs(
             System.Windows.Input.Mouse.PrimaryDevice, Environment.TickCount, System.Windows.Input.MouseButton.Left)
         {
             RoutedEvent = UIElement.MouseLeftButtonUpEvent,

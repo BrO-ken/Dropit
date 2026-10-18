@@ -85,6 +85,7 @@ internal sealed class WheelEditorWindow : Window
         foreach (var b in Chrome.CaptionButtons(this))
             title.Children.Add(b);
         title.Children.Add(titleText);
+        Chrome.MakeDraggable(this, title);
         root.Children.Add(title);
         var intro = Text(T("Star your favourite slices: they always come first, in the same place. Use the switch to hide a slice.", "ضع نجمة على شرائحك المفضّلة: فهي تأتي دائمًا في المقام نفسه وبالترتيب نفسه. استخدم المفتاح لإخفاء شريحة."),
             13.5, brush: Theme.Muted);

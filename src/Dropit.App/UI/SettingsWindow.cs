@@ -278,6 +278,7 @@ internal sealed class SettingsWindow : Window
         text.Children.Add(title);
         text.Children.Add(Text(T("Grab a file, tap a key, drop it on a format.", "امسك ملفًا، واضغط مفتاحًا، وأفلته على صيغة."), 13.5, brush: Theme.Muted));
         panel.Children.Add(text);
+        Chrome.MakeDraggable(this, panel);
         return panel;
     }
 

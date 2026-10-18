@@ -151,6 +151,7 @@ internal sealed class HomeWindow : Window
         var names = Controls.Row(title, version);
         names.VerticalAlignment = VerticalAlignment.Center;
         row.Children.Add(names);
+        Chrome.MakeDraggable(this, row);
         return row;
     }
 
