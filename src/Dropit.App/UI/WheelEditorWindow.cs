@@ -44,10 +44,9 @@ internal sealed class WheelEditorWindow : Window
         Direction.Apply(this);
         Theme.Refresh();
         Title = T("Dropit – customize wheels", "Dropit – تخصيص العجلات");
-        Width = 640;
-        Height = 820;
-        MinWidth = 480;
+        MinWidth = 440;
         Chrome.Apply(this);
+        Chrome.FitToWorkArea(this, 640, 900);
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Icon = new BitmapImage(new Uri("pack://application:,,,/Assets/Dropit.ico"));
         Background = Theme.Page;
@@ -79,8 +78,13 @@ internal sealed class WheelEditorWindow : Window
     {
         var offset = _scroll.VerticalOffset;
         var root = new StackPanel { Margin = new Thickness(32, 8, 32, 32) };
-        var title = Text(T("Customize wheels", "تخصيص العجلات"), 26, FontWeights.SemiBold);
-        title.FontFamily = Theme.DisplayFont;
+        var titleText = Text(T("Customize wheels", "تخصيص العجلات"), 26, FontWeights.SemiBold);
+        titleText.FontFamily = Theme.DisplayFont;
+        // The caption is drawn by us, so this row carries the window buttons.
+        var title = new DockPanel { Margin = new Thickness(0, 0, 0, 4) };
+        foreach (var b in Chrome.CaptionButtons(this))
+            title.Children.Add(b);
+        title.Children.Add(titleText);
         root.Children.Add(title);
         var intro = Text(T("Star your favourite slices: they always come first, in the same place. Use the switch to hide a slice.", "ضع نجمة على شرائحك المفضّلة: فهي تأتي دائمًا في المقام نفسه وبالترتيب نفسه. استخدم المفتاح لإخفاء شريحة."),
             13.5, brush: Theme.Muted);

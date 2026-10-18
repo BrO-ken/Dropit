@@ -35,10 +35,9 @@ internal sealed class SettingsWindow : Window
         Direction.Apply(this);
         Theme.Refresh();
         Title = T("Dropit – settings", "Dropit – الإعدادات");
-        Width = 680;
-        Height = 820;
-        MinWidth = 520;
+        MinWidth = 460;
         Chrome.Apply(this);
+        Chrome.FitToWorkArea(this, 680, 900);
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Icon = new BitmapImage(new Uri("pack://application:,,,/Assets/Dropit.ico"));
         Background = Theme.Page;
@@ -261,6 +260,9 @@ internal sealed class SettingsWindow : Window
     private UIElement Header()
     {
         var panel = new DockPanel { Margin = new Thickness(0, 0, 0, 4) };
+        // Added first so they dock to the trailing edge ahead of the logo.
+        foreach (var b in Chrome.CaptionButtons(this))
+            panel.Children.Add(b);
         var image = new Image
         {
             Source = new BitmapImage(new Uri("pack://application:,,,/Assets/Dropit.png")),

@@ -38,12 +38,10 @@ internal sealed class HomeWindow : Window
         Theme.Refresh();
 
         Title = "Dropit";
-        Width = 560;
-        Height = 620;
-        MinWidth = 440;
-        MinHeight = 480;
+        MinWidth = 400;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Chrome.Apply(this);
+        Chrome.FitToWorkArea(this, 560, 640);
         FontFamily = Theme.UiFont;
 
         // Dragging the window: every chrome-less area of the shell has to move it, otherwise the user

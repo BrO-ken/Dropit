@@ -232,7 +232,7 @@ jobs:
           path: aur
           include-hidden-files: true
 
-release:
+  release:
     name: Publish release
     needs: [version, windows, linux, arch]
     if: needs.version.outputs.publish == 'true'

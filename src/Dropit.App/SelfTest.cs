@@ -44,7 +44,7 @@ internal static class SelfTest
 
             log.AddRange(SmokeTest.Run(Path.Combine(outDir, "smoke")));
             // Saved after every step, so a hard crash (which skips the catch below) still shows where it stopped.
-            foreach (var step in new Action[] { () => TestSettingsRoundTrip(log), () => TestExplorerCom(outDir, log), () => TestDrops(log), () => TestOcr(outDir, log), () => TestUpdateCheck(log) })
+            foreach (var step in new Action[] { () => TestSettingsRoundTrip(log), () => TestCaptionClosesWindow(log), () => TestExplorerCom(outDir, log), () => TestDrops(log), () => TestOcr(outDir, log), () => TestUpdateCheck(log) })
             {
                 File.WriteAllLines(Path.Combine(outDir, "self-test.txt"), log);
                 step();
@@ -156,6 +156,31 @@ internal static class SelfTest
         Check(back.Hotkey == HotkeyPreset.CtrlAltW && back.FavoriteOperations.Single() == "image.to.webp" && back.Language == Language.Arabic, "settings JSON round trip");
         Check(json.Contains("\"CtrlAltW\""), "enums stored as names");
         log.Add("ok settings json");
+    }
+
+    /// <summary>
+    /// Dropping the system title bar left the settings window with no way to close it, which is worse
+    /// than the plain white caption it replaced. Raises a real MouseLeftButtonUp on the caption's
+    /// close button and checks the window actually goes away.
+    /// </summary>
+    private static void TestCaptionClosesWindow(List<string> log)
+    {
+        var window = new SettingsWindow(new AppSettings(), new ToolLocator(), () => { });
+        window.Show();
+        window.UpdateLayout();
+        var close = UI.Chrome.FindCloseButton(window);
+        Check(close is not null, "settings window has a close button");
+        if (close is null)
+            return;
+        close.RaiseEvent(new System.Windows.Input.MouseButtonEventArgs(
+            System.Windows.Input.Mouse.PrimaryDevice, Environment.TickCount, System.Windows.Input.MouseButton.Left)
+        {
+            RoutedEvent = UIElement.MouseLeftButtonUpEvent,
+        });
+        System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(
+            () => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        Check(!window.IsVisible, "caption close button closes the settings window");
+        log.Add("ok caption close");
     }
 
     /// <summary>Reading the Explorer selection goes through late-bound COM, which trimming could break.</summary>
