@@ -65,7 +65,9 @@ internal sealed class ParameterDialog : Window
             else if (e.Key == Key.Escape)
                 DialogResult = false;
         };
-        var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 18, 0, 0) };
+        var buttons = Controls.Row();
+        buttons.HorizontalAlignment = HorizontalAlignment.Right;
+        buttons.Margin = new Thickness(0, 18, 0, 0);
         buttons.Children.Add(ok);
         buttons.Children.Add(cancel);
         stack.Children.Add(buttons);

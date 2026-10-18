@@ -153,7 +153,8 @@ internal sealed class SettingsWindow : Window
 
         root.Children.Add(SectionHeader(T("Results", "النتائج")));
         var folderLine = Text(_settings.OutputDirectory ?? "", 12, brush: Theme.Muted, wrap: false);
-        var folderRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 12, 0, 0) };
+        var folderRow = Controls.Row();
+        folderRow.Margin = new Thickness(0, 12, 0, 0);
         folderRow.Children.Add(Button(T("Choose folder…", "اختر مجلدًا…"), PickFolder, glyph: Glyphs.Folder));
         folderLine.Margin = new Thickness(12, 0, 0, 0);
         folderLine.VerticalAlignment = VerticalAlignment.Center;
@@ -252,7 +253,7 @@ internal sealed class SettingsWindow : Window
 
     private static FrameworkElement Wrap(FrameworkElement element)
     {
-        element.HorizontalAlignment = HorizontalAlignment.Left;
+        element.HorizontalAlignment = Loc.IsRtl ? HorizontalAlignment.Right : HorizontalAlignment.Left;
         element.Margin = new Thickness(0, 12, 0, 0);
         return element;
     }

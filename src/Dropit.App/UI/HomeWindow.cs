@@ -148,9 +148,8 @@ internal sealed class HomeWindow : Window
         version.Margin = new Thickness(10, 0, 0, 0);
         version.VerticalAlignment = VerticalAlignment.Center;
 
-        var names = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        names.Children.Add(title);
-        names.Children.Add(version);
+        var names = Controls.Row(title, version);
+        names.VerticalAlignment = VerticalAlignment.Center;
         row.Children.Add(names);
         return row;
     }
@@ -224,10 +223,7 @@ internal sealed class HomeWindow : Window
             showWheel(null);
         };
 
-        var grid = new Grid();
-        grid.Children.Add(border);
-        grid.Children.Add(Controls.GlassRim());
-        return grid;
+        return border;
     }
 
     private UIElement WheelRow(WheelKind kind, Input.ModifierKey key, Action<IReadOnlyList<string>?> showWheel)
@@ -265,9 +261,8 @@ internal sealed class HomeWindow : Window
         var row = new DockPanel { Margin = new Thickness(0, 6, 0, 0), Cursor = Cursors.Hand };
         DockPanel.SetDock(pill, Loc.IsRtl ? Dock.Right : Dock.Left);
         row.Children.Add(pill);
-        var texts = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        texts.Children.Add(name);
-        texts.Children.Add(what);
+        var texts = Controls.Row(name, what);
+        texts.VerticalAlignment = VerticalAlignment.Center;
         row.Children.Add(texts);
 
         var border = new Border

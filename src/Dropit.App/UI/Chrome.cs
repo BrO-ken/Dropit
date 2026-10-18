@@ -60,13 +60,13 @@ internal static class Chrome
     {
         if (minimisable)
         {
-            var min = GlyphButton("\uE921", T("Minimize", "تصغير"));
+            var min = GlyphButton("\uE921", T("Minimize", "تصغير"), "", close: false);
             min.MouseLeftButtonUp += (_, _) => window.WindowState = WindowState.Minimized;
             DockPanel.SetDock(min, Loc.IsRtl ? Dock.Left : Dock.Right);
             yield return min;
         }
 
-        var close = GlyphButton(Glyphs.Close, T("Close", "إغلاق"), "CaptionClose");
+        var close = GlyphButton(Glyphs.Close, T("Close", "إغلاق"), "CaptionClose", close: true);
         close.MouseLeftButtonUp += (_, _) => window.Close();
         DockPanel.SetDock(close, Loc.IsRtl ? Dock.Left : Dock.Right);
         yield return close;
@@ -103,32 +103,53 @@ internal static class Chrome
         return null;
     }
 
-    /// <summary>A square icon button with a hover state, sized for the caption strip.</summary>
-    private static Border GlyphButton(string glyph, string tip, string name = "")
+    /// <summary>
+    /// A caption button. Two things make it feel grabbable: the hit area covers the whole strip height
+    /// instead of hugging a 10px glyph, and the hover state is obvious. Close additionally turns red,
+    /// which is the one place in a window where a colour carries meaning.
+    /// </summary>
+    private static Border GlyphButton(string glyph, string tip, string name, bool close)
     {
         var icon = new TextBlock
         {
             Text = glyph,
             FontFamily = Theme.Icons,
-            FontSize = 10,
+            FontSize = 11,
             Foreground = Theme.Muted,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
+            // The glyph must not eat the clicks meant for the padding around it.
+            IsHitTestVisible = false,
         };
         var button = new Border
         {
             Name = name,
             Background = Brushes.Transparent,
             CornerRadius = new CornerRadius(6),
-            Width = 30,
-            Height = 26,
-            Margin = new Thickness(4, 0, 0, 0),
+            Width = 40,
+            Height = 32,
+            Margin = new Thickness(2, 3, 2, 3),
             Cursor = Cursors.Hand,
             ToolTip = tip,
             Child = icon,
+            Focusable = false,
         };
-        button.MouseEnter += (_, _) => { button.Background = Theme.Hover; icon.Foreground = Theme.Text; };
-        button.MouseLeave += (_, _) => { button.Background = Brushes.Transparent; icon.Foreground = Theme.Muted; };
+        void Enter()
+        {
+            button.Background = close ? Theme.AccentRed : Theme.Hover;
+            icon.Foreground = close ? Brushes.White : Theme.Text;
+        }
+        void Leave()
+        {
+            button.Background = Brushes.Transparent;
+            icon.Foreground = Theme.Muted;
+        }
+        button.MouseEnter += (_, _) => Enter();
+        button.MouseLeave += (_, _) => Leave();
+        // Without this the WindowChrome keeps the hit test for the drag gesture and the button is
+        // only a picture: no hover, no click.
+        WindowChrome.SetIsHitTestVisibleInChrome(button, true);
         return button;
     }
+
 }

@@ -146,6 +146,9 @@ internal static class Theme
     public static Brush PanelBorder { get; private set; } = null!;
     public static Brush Highlight { get; private set; } = null!;
 
+    /// <summary>The close button hover. Red is the one place in the UI where a colour carries meaning.</summary>
+    public static Brush AccentRed { get; private set; } = null!;
+
     /// <summary>Same rim colour as a <see cref="Color"/>, for gradient stops that need one.</summary>
     public static Color HighlightColor { get; private set; }
     public static Brush Card { get; private set; } = null!;
@@ -197,6 +200,7 @@ internal static class Theme
         PanelBorder = Freeze(new SolidColorBrush(palette.PanelEdge));
         Highlight = Freeze(new SolidColorBrush(palette.Highlight));
         HighlightColor = palette.Highlight;
+        AccentRed = Freeze(new SolidColorBrush(Color.FromRgb(0xC4, 0x2B, 0x1C)));
         Card = Freeze(new SolidColorBrush(palette.Card));
         CardBorder = Freeze(new SolidColorBrush(palette.CardEdge));
         Slice = Freeze(new SolidColorBrush(palette.Slice));

@@ -50,7 +50,7 @@ internal sealed class WheelWindow : Window
     private readonly TextBlock _iconGlyph = new() { FontSize = 24, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 6) };
     private readonly TextBlock _title = HubText(16, FontWeights.SemiBold);
     private readonly TextBlock _detail = HubText(11.5, FontWeights.Normal);
-    private readonly StackPanel _tabs = new() { Orientation = Orientation.Horizontal };
+    private readonly StackPanel _tabs = Controls.Row();
     private readonly Border _tabTrack = new() { CornerRadius = new CornerRadius(10), Padding = new Thickness(2), HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 8, 0, 0) };
     private readonly StackPanel _hubContent = new() { Width = InnerRadius * 1.75 };
 

@@ -69,9 +69,8 @@ internal sealed class JobsWindow : Window
         close.MouseLeftButtonUp += (_, _) => Hide();
         DockPanel.SetDock(close, Loc.IsRtl ? Dock.Left : Dock.Right);
         header.Children.Add(close);
-        var left = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        left.Children.Add(pin);
-        left.Children.Add(caption);
+        var left = Controls.Row(pin, caption);
+        left.VerticalAlignment = VerticalAlignment.Center;
         header.Children.Add(left);
         header.MouseLeftButtonDown += (_, e) =>
         {

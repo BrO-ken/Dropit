@@ -14,43 +14,67 @@ namespace Dropit.App.UI;
 /// </summary>
 internal static class Controls
 {
-    public static TextBlock Text(string text, double size = 14, FontWeight? weight = null, Brush? brush = null, bool wrap = true) => new()
-    {
-        Text = text,
-        FontSize = size,
-        // Arabic puts dots under the baseline; 1.0 leading collides them with the next line.
-        LineHeight = size * Theme.BodyLineHeight,
-        LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
-        FontWeight = weight ?? FontWeights.Normal,
-        Foreground = brush ?? Theme.Text,
-        TextWrapping = wrap ? TextWrapping.Wrap : TextWrapping.NoWrap,
-        TextTrimming = wrap ? TextTrimming.None : TextTrimming.CharacterEllipsis,
-    };
-
-/// <summary>
-    /// A one-pixel luminous rim along the top edge. This single line is what makes a flat panel read as
-    /// frosted glass - a real backdrop blur is not available to a transparent borderless window.
+    /// <summary>
+    /// Arabic reads noticeably smaller than latin at the same point size: the script sits lower on the
+    /// line and its ascenders and dots are shorter. Nudging the size up is what makes the two
+    /// languages feel like the same interface rather than the Arabic one looking like a zoom-out.
     /// </summary>
-    public static Border GlassRim(bool corners = false) => new()
+    public static double Type(double size) => Loc.IsRtl ? Math.Round(size * 1.09, 1) : size;
+
+    /// <summary>
+    /// A horizontal row that reads in the interface's direction. WPF lays a horizontal StackPanel out
+    /// left to right whatever the FlowDirection, so in Arabic the children have to be reversed by
+    /// hand - otherwise the options read backwards: "Windows" would sit on the far left instead of
+    /// being the first thing read on the right.
+    /// </summary>
+    public static StackPanel Row(params UIElement[] children)
     {
-        Height = 1,
-        CornerRadius = corners ? new CornerRadius(10, 10, 0, 0) : default,
-        VerticalAlignment = VerticalAlignment.Top,
-        IsHitTestVisible = false,
-        Background = new LinearGradientBrush(
-        [
-            new GradientStop(Theme.HighlightColor, 0),
-            new GradientStop(Theme.HighlightColor, 0.45),
-            new GradientStop(Colors.Transparent, 1),
-        ], new Point(0, 0), new Point(1, 0)),
-    };
+        var panel = new StackPanel { Orientation = Orientation.Horizontal };
+        var ordered = Loc.IsRtl ? children.Reverse().ToArray() : children;
+        foreach (var child in ordered)
+            panel.Children.Add(child);
+        return panel;
+    }
+
+    /// <summary>
+    /// Same direction rule as <see cref="Row"/>, but the items wrap to a second line instead of
+    /// running off the edge. Five keyboard shortcuts do not fit next to a title on a narrow window.
+    /// </summary>
+    public static WrapPanel WrappingRow(params UIElement[] children)
+    {
+        // WPF mirrors a WrapPanel under RTL but not a StackPanel, so without pinning the direction the
+        // reading order would depend on which helper happened to build the row. Pin it and let the
+        // explicit child order be the single source of truth.
+        var panel = new WrapPanel { Orientation = Orientation.Horizontal, FlowDirection = FlowDirection.LeftToRight };
+        var ordered = Loc.IsRtl ? children.Reverse().ToArray() : children;
+        foreach (var child in ordered)
+            panel.Children.Add(child);
+        return panel;
+    }
+
+    public static TextBlock Text(string text, double size = 14, FontWeight? weight = null, Brush? brush = null, bool wrap = true)
+    {
+        size = Type(size);
+        return new TextBlock
+        {
+            Text = text,
+            FontSize = size,
+            // Arabic puts dots under the baseline; 1.0 leading collides them with the next line.
+            LineHeight = size * Theme.BodyLineHeight,
+            LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
+            FontWeight = weight ?? FontWeights.Normal,
+            Foreground = brush ?? Theme.Text,
+            TextWrapping = wrap ? TextWrapping.Wrap : TextWrapping.NoWrap,
+            TextTrimming = wrap ? TextTrimming.None : TextTrimming.CharacterEllipsis,
+        };
+    }
 
     public static TextBlock SectionHeader(string text) => new()
     {
         Text = text,
         FontFamily = Theme.DisplayFont,
-        FontSize = 15,
-        LineHeight = 15 * Theme.BodyLineHeight,
+        FontSize = Type(15),
+        LineHeight = Type(15) * Theme.BodyLineHeight,
         LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
         FontWeight = FontWeights.SemiBold,
         Foreground = Theme.Muted,
@@ -102,9 +126,8 @@ internal static class Controls
         if (below is not null)
             content.Children.Add(below);
 
-        var stack = new Grid();
-        stack.Children.Add(content);
-        stack.Children.Add(GlassRim());
+        // Depth, not a highlight line: a 1px rim on the top edge reads as a stray rule once the panel
+        // is taller than a couple of lines, which is worse than no effect at all.
         return new Border
         {
             Background = Theme.Card,
@@ -114,14 +137,14 @@ internal static class Controls
             Padding = new Thickness(18, 14, 18, 14),
             Margin = new Thickness(0, 0, 0, 4),
             SnapsToDevicePixels = true,
-            Child = stack,
+            Effect = Theme.Shadow(14),
+            Child = content,
         };
     }
 
     /// <summary>A row of mutually exclusive pills; the active one is filled with the accent gradient.</summary>
     public static Border Segmented<T>(IReadOnlyList<(string Label, T Value)> options, T selected, Action<T> changed)
     {
-        var panel = new StackPanel { Orientation = Orientation.Horizontal };
         var pills = new List<(Border Pill, TextBlock Text, T Value)>();
         void Select(T value)
         {
@@ -135,11 +158,11 @@ internal static class Controls
         }
         foreach (var (label, value) in options)
         {
-            var text = new TextBlock { Text = label, FontSize = 12.5, VerticalAlignment = VerticalAlignment.Center };
+            var text = new TextBlock { Text = label, FontSize = Type(12.5), VerticalAlignment = VerticalAlignment.Center };
             var pill = new Border
             {
                 CornerRadius = new CornerRadius(7),
-                Padding = new Thickness(12, 5, 12, 6),
+                Padding = new Thickness(10, 5, 10, 6),
                 Background = Brushes.Transparent,
                 Cursor = Cursors.Hand,
                 Child = text,
@@ -151,7 +174,6 @@ internal static class Controls
                 changed(v);
             };
             pills.Add((pill, text, value));
-            panel.Children.Add(pill);
         }
         Select(selected);
         return new Border
@@ -159,7 +181,7 @@ internal static class Controls
             Background = Theme.Track,
             CornerRadius = new CornerRadius(9),
             Padding = new Thickness(2),
-            Child = panel,
+            Child = WrappingRow([.. pills.Select(p => (UIElement)p.Pill)]),
         };
     }
 
@@ -263,16 +285,14 @@ internal static class Controls
         };
         Show();
 
-        var row = new StackPanel { Orientation = Orientation.Horizontal };
-        row.Children.Add(surface);
-        row.Children.Add(label);
-        return row;
+        return Row(surface, label);
     }
 
     /// <summary>A rounded button; <paramref name="primary"/> ones use the accent gradient.</summary>
     public static Border Button(string text, Action click, bool primary = false, string? glyph = null)
     {
-        var content = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
+        var content = Row();
+        content.HorizontalAlignment = HorizontalAlignment.Center;
         var foreground = primary ? Theme.TextOnAccent : Theme.Text;
         if (glyph is not null)
         {
@@ -286,7 +306,7 @@ internal static class Controls
                 Margin = new Thickness(0, 1, 7, 0),
             });
         }
-        content.Children.Add(new TextBlock { Text = text, FontSize = 13, Foreground = foreground, FontWeight = primary ? FontWeights.SemiBold : FontWeights.Normal, VerticalAlignment = VerticalAlignment.Center });
+        content.Children.Add(new TextBlock { Text = text, FontSize = Type(13), Foreground = foreground, FontWeight = primary ? FontWeights.SemiBold : FontWeights.Normal, VerticalAlignment = VerticalAlignment.Center });
         var normal = primary ? Theme.AccentGradient : Theme.Card;
         var button = new Border
         {
@@ -315,6 +335,6 @@ internal static class Controls
         CornerRadius = new CornerRadius(6),
         Padding = new Thickness(8, 2, 8, 3),
         Background = new SolidColorBrush(Color.FromArgb(0x26, good ? (byte)0x3C : (byte)0xF0, good ? (byte)0xC3 : (byte)0x5A, good ? (byte)0x6E : (byte)0x5A)),
-        Child = new TextBlock { Text = text, FontSize = 11.5, FontWeight = FontWeights.SemiBold, Foreground = good ? Theme.Success : Theme.Error },
+        Child = new TextBlock { Text = text, FontSize = Type(11.5), FontWeight = FontWeights.SemiBold, Foreground = good ? Theme.Success : Theme.Error },
     };
 }
