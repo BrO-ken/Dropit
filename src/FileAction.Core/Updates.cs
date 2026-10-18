@@ -5,7 +5,9 @@ namespace FileAction.Core;
 /// <summary>The latest published release, as reported by the GitHub releases API.</summary>
 public sealed record UpdateInfo(Version Version, string Tag, string PageUrl, string? InstallerUrl, string? InstallerSha256)
 {
-    public const string Repository = "Metamorfolog/file_action";
+    // This fork checks its own releases. Pointing it at the upstream repository would make a build
+    // that skipped the upstream checksums install the upstream installer instead.
+    public const string Repository = "BrO-ken/Dropit";
     public const string LatestReleaseApi = $"https://api.github.com/repos/{Repository}/releases/latest";
 
     /// <summary>Parses a "releases/latest" response; null when it isn't a usable release.</summary>

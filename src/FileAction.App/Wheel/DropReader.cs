@@ -22,6 +22,8 @@ internal sealed record DropContent(IReadOnlyList<FileItem> Items, Func<Task>? Pr
     private const string GroupDescriptor = "FileGroupDescriptorW";
     private const string FileContents = "FileContents";
     private const string UrlFormat = "UniformResourceLocatorW";
+    /// <summary>Ceiling for a file fetched by dropping a web link on the wheel.</summary>
+    private const long MaxDownloadBytes = 512L * 1024 * 1024;
     private static readonly HttpClient Http = CreateHttp();
 
     /// <summary>
@@ -230,11 +232,31 @@ internal sealed record DropContent(IReadOnlyList<FileItem> Items, Func<Task>? Pr
         var target = Target(name);
         return new DropContent([new FileItem(target)], async () =>
         {
-            using var response = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
-            response.EnsureSuccessStatusCode();
-            await using var input = await response.Content.ReadAsStreamAsync();
-            await using var output = File.Create(target);
-            await input.CopyToAsync(output);
+            try
+            {
+                using var response = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                response.EnsureSuccessStatusCode();
+                // A dropped link must not be able to fill the disk, whatever the server's Content-Length claims.
+                if (response.Content.Headers.ContentLength is { } declared && declared > MaxDownloadBytes)
+                    throw new IOException(T($"Soubor je větší než {MaxDownloadBytes / 1024 / 1024} MB.", $"The file is larger than {MaxDownloadBytes / 1024 / 1024} MB."));
+                await using var input = await response.Content.ReadAsStreamAsync();
+                await using var output = File.Create(target);
+                var buffer = new byte[81920];
+                long done = 0;
+                int read;
+                while ((read = await input.ReadAsync(buffer)) > 0)
+                {
+                    done += read;
+                    if (done > MaxDownloadBytes)
+                        throw new IOException(T($"Soubor je větší než {MaxDownloadBytes / 1024 / 1024} MB.", $"The file is larger than {MaxDownloadBytes / 1024 / 1024} MB."));
+                    await output.WriteAsync(buffer.AsMemory(0, read));
+                }
+            }
+            catch
+            {
+                OutputPaths.TryDelete(target);
+                throw;
+            }
         });
     }
 
@@ -253,7 +275,8 @@ internal sealed record DropContent(IReadOnlyList<FileItem> Items, Func<Task>? Pr
     /// </summary>
     private static string RescueFromTemp(string path)
     {
-        var temp = Path.GetFullPath(Path.GetTempPath());
+        // The trailing separator matters: without it "...\TempOld\a.png" would also match "...\Temp".
+        var temp = Path.TrimEndingDirectorySeparator(Path.GetFullPath(Path.GetTempPath())) + Path.DirectorySeparatorChar;
         if (!File.Exists(path) || !Path.GetFullPath(path).StartsWith(temp, StringComparison.OrdinalIgnoreCase))
             return path;
         var target = Target(Path.GetFileName(path));

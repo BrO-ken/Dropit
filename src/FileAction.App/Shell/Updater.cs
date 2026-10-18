@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
+using System.Text;
 using System.Windows;
 using System.Windows.Threading;
 using FileAction.Core;
@@ -83,7 +84,8 @@ internal sealed class Updater
 
         Installing = true;
         Changed?.Invoke();
-        var target = Path.Combine(Path.GetTempPath(), $"FileAction-Setup-{update.Version}.exe");
+        // A unique name: a predictable file in %TEMP% could be swapped between the check and the launch.
+        var target = Path.Combine(Path.GetTempPath(), $"FileAction-Setup-{update.Version}-{Guid.NewGuid():N}.exe");
         try
         {
             Notifications.Show(T("Stahuji aktualizaci…", "Downloading the update…"), $"FileAction {update.Version}");
@@ -95,13 +97,14 @@ internal sealed class Updater
                 await input.CopyToAsync(output);
             }
 
-            if (update.InstallerSha256 is { } expected)
-            {
-                await using var file = File.OpenRead(target);
-                var actual = Convert.ToHexString(await SHA256.HashDataAsync(file)).ToLowerInvariant();
-                if (actual != expected)
-                    throw new InvalidOperationException(T("Stažený instalátor nesouhlasí s otiskem z GitHubu.", "The downloaded installer doesn't match the checksum published on GitHub."));
-            }
+            // Never run a release whose checksum GitHub did not publish: without one there is nothing
+            // to check the download against, and the installer runs silently.
+            if (update.InstallerSha256 is not { } expected || !IsSha256Hex(expected))
+                throw new InvalidOperationException(T("Vydání nemá publikovaný SHA-256, instalace byla odmítnuta.", "The release has no published SHA-256, so the update was refused."));
+            await using var file = File.OpenRead(target);
+            var actual = Convert.ToHexString(await SHA256.HashDataAsync(file)).ToLowerInvariant();
+            if (!CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(actual), Encoding.ASCII.GetBytes(expected)))
+                throw new InvalidOperationException(T("Stažený instalátor nesouhlasí s otiskem z GitHubu.", "The downloaded installer doesn't match the checksum published on GitHub."));
 
             // The installer closes this app, installs over it and starts the new version (see installer\FileAction.iss).
             Process.Start(new ProcessStartInfo(target, "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS") { UseShellExecute = true });
@@ -115,6 +118,9 @@ internal sealed class Updater
             Notifications.Show(T("Aktualizace se nepovedla", "Update failed"), ex.Message, error: true);
         }
     }
+
+    private static bool IsSha256Hex(string value) =>
+        value.Length == 64 && value.All(Uri.IsHexDigit);
 
     public static void Open(string url)
     {

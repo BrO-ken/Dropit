@@ -1,5 +1,7 @@
 using System.IO;
 using System.IO.Pipes;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text;
 using System.Windows.Threading;
 using FileAction.App.Native;
@@ -49,6 +51,26 @@ internal sealed class SingleInstance : IDisposable
         }
     }
 
+    /// <summary>
+    /// The pipe is machine-wide and its name contains the user name, so without an explicit ACL any other
+    /// local account could push arguments to the running copy. Grant access to this user only.
+    /// </summary>
+    private static PipeSecurity CurrentUserOnly()
+    {
+        var security = new PipeSecurity();
+        security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+        var user = WindowsIdentity.GetCurrent().User;
+        if (user is not null)
+            security.SetAccessRule(new PipeAccessRule(user, PipeAccessRights.ReadWrite | PipeAccessRights.Synchronize, AccessControlType.Allow));
+        foreach (var sid in new[]
+                 {
+                     new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null),
+                     new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null),
+                 })
+            security.SetAccessRule(new PipeAccessRule(sid, PipeAccessRights.FullControl, AccessControlType.Allow));
+        return security;
+    }
+
     public void Listen(Dispatcher dispatcher, Action<string[]> onArgs)
     {
         Task.Run(async () =>
@@ -57,7 +79,11 @@ internal sealed class SingleInstance : IDisposable
             {
                 try
                 {
-                    await using var server = new NamedPipeServerStream(Id, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+                    // .NET 10 takes the security descriptor through this factory; the NamedPipeServerStream
+                    // constructors no longer accept a PipeSecurity.
+                    await using var server = NamedPipeServerStreamAcl.Create(
+                        Id, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous,
+                        0, 0, CurrentUserOnly(), HandleInheritability.None, (PipeAccessRights)0);
                     await server.WaitForConnectionAsync(_cts.Token);
                     using var reader = new StreamReader(server, Encoding.UTF8);
                     var text = await reader.ReadToEndAsync(_cts.Token);

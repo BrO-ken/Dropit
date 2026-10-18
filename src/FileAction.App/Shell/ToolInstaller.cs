@@ -1,6 +1,7 @@
 using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using FileAction.Core;
 using SharpCompress.Archives;
@@ -31,23 +32,24 @@ internal static class ToolInstaller
     {
         var (url, sha256, exeName) = tool switch
         {
-            ExternalTool.Ffmpeg => (FfmpegUrl, (await Http.GetStringAsync(FfmpegUrl + ".sha256", ct)).Trim().Split(' ', '\t', '\n')[0].ToLowerInvariant(), "ffmpeg.exe"),
+            ExternalTool.Ffmpeg => (FfmpegUrl, Normalize(await Http.GetStringAsync(FfmpegUrl + ".sha256", ct)), "ffmpeg.exe"),
             ExternalTool.Pandoc => await PandocAssetAsync(ct),
             _ => throw new ConversionException(T("Tento nástroj se instaluje zvlášť.", "This tool is installed separately.")),
         };
+
+        // Nothing is unpacked without a published SHA-256 to check the download against.
+        if (!IsSha256Hex(sha256))
+            throw new ConversionException(T($"Autoři programu nezveřejnili kontrolní součet {ToolLocator.DisplayName(tool)}, instalace byla odmítnuta.", $"The authors published no SHA-256 for {ToolLocator.DisplayName(tool)}, so the install was refused."));
 
         Directory.CreateDirectory(ToolLocator.DownloadFolder);
         var archive = Path.Combine(Path.GetTempPath(), $"fileaction-{exeName}-{Guid.NewGuid():N}{Path.GetExtension(new Uri(url).AbsolutePath)}");
         try
         {
             await DownloadAsync(url, archive, progress, ct);
-            if (sha256 is not null)
-            {
-                await using var file = File.OpenRead(archive);
-                var actual = Convert.ToHexString(await SHA256.HashDataAsync(file, ct)).ToLowerInvariant();
-                if (actual != sha256)
-                    throw new ConversionException(T("Stažený soubor nesouhlasí s otiskem zveřejněným autory.", "The download doesn't match the checksum published by its authors."));
-            }
+            await using var file = File.OpenRead(archive);
+            var actual = Convert.ToHexString(await SHA256.HashDataAsync(file, ct)).ToLowerInvariant();
+            if (!CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(actual), Encoding.ASCII.GetBytes(sha256)))
+                throw new ConversionException(T("Stažený soubor nesouhlasí s otiskem zveřejněným autory.", "The download doesn't match the checksum published by its authors."));
             await Task.Run(() => ExtractExe(archive, exeName, ct), ct);
         }
         finally
@@ -56,7 +58,18 @@ internal static class ToolInstaller
         }
     }
 
-    private static async Task<(string Url, string? Sha256, string Exe)> PandocAssetAsync(CancellationToken ct)
+    /// <summary>Keeps the 64 hex characters of a published checksum, whatever spacing the publisher used.</summary>
+    private static string Normalize(string text)
+    {
+        var tokens = text.Trim().Split(' ', '\t', '\n', '\r');
+        var candidate = tokens.FirstOrDefault(t => t.Length == 64) ?? "";
+        return candidate.ToLowerInvariant();
+    }
+
+    private static bool IsSha256Hex(string value) =>
+        value.Length == 64 && value.All(Uri.IsHexDigit);
+
+    private static async Task<(string Url, string Sha256, string Exe)> PandocAssetAsync(CancellationToken ct)
     {
         using var doc = JsonDocument.Parse(await Http.GetStringAsync(PandocApi, ct));
         foreach (var asset in doc.RootElement.GetProperty("assets").EnumerateArray())
@@ -65,7 +78,7 @@ internal static class ToolInstaller
             if (!name.EndsWith("-windows-x86_64.zip", StringComparison.OrdinalIgnoreCase))
                 continue;
             var digest = asset.TryGetProperty("digest", out var d) ? d.GetString() : null;
-            var sha = digest is not null && digest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase) ? digest[7..].ToLowerInvariant() : null;
+            var sha = digest is not null && digest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase) ? digest[7..].ToLowerInvariant() : "";
             return (asset.GetProperty("browser_download_url").GetString()!, sha, "pandoc.exe");
         }
         throw new ConversionException(T("Nenašel jsem Pandoc pro Windows.", "Couldn't find Pandoc for Windows."));
