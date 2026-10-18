@@ -144,12 +144,16 @@ internal sealed class HomeWindow : Window
             Foreground = Theme.Text,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        var version = Controls.Text($"v{typeof(HomeWindow).Assembly.GetName().Version?.ToString(3)}", 11.5, brush: Theme.Muted, wrap: false);
-        version.Margin = new Thickness(10, 0, 0, 0);
+var version = Controls.Text($"v{typeof(HomeWindow).Assembly.GetName().Version?.ToString(3)}", 11.5, brush: Theme.Muted, wrap: false);
+        // Row reverses in Arabic, so the gap has to move to the other side of the version too.
+        version.Margin = Loc.IsRtl ? new Thickness(0, 0, 10, 0) : new Thickness(10, 0, 0, 0);
         version.VerticalAlignment = VerticalAlignment.Center;
 
         var names = Controls.Row(title, version);
         names.VerticalAlignment = VerticalAlignment.Center;
+        // Shrink to content and sit on the reading edge; a stretched horizontal stack would keep its
+        // children on the left whatever the language.
+        names.HorizontalAlignment = Loc.IsRtl ? HorizontalAlignment.Right : HorizontalAlignment.Left;
         row.Children.Add(names);
         Chrome.MakeDraggable(this, row);
         return row;
@@ -250,20 +254,21 @@ internal sealed class HomeWindow : Window
         };
 
         var name = Controls.Text(AppSettings.WheelName(kind), 13.5, FontWeights.SemiBold);
-        name.Margin = new Thickness(12, 0, 0, 0);
+        name.Margin = Loc.IsRtl ? new Thickness(0, 0, 12, 0) : new Thickness(12, 0, 0, 0);
         var what = Controls.Text(kind switch
         {
             WheelKind.Convert => T("JPG, PNG, MP4, DOCX, PDF and more", "JPG وPNG وMP4 وDOCX وPDF وغيرها"),
             WheelKind.Tools => T("Compress, resize, trim, merge, extract text", "ضغط، تغيير الحجم، قصّ، دمج، استخراج نص"),
             _ => T("Copy, move, rename, share, terminal", "نسخ، نقل، إعادة تسمية، مشاركة، طرفية"),
         }, 11.5, brush: Theme.Muted, wrap: false);
-        what.Margin = new Thickness(12, 0, 0, 0);
+        what.Margin = Loc.IsRtl ? new Thickness(0, 0, 12, 0) : new Thickness(12, 0, 0, 0);
 
         var row = new DockPanel { Margin = new Thickness(0, 6, 0, 0), Cursor = Cursors.Hand };
         DockPanel.SetDock(pill, Loc.IsRtl ? Dock.Right : Dock.Left);
         row.Children.Add(pill);
         var texts = Controls.Row(name, what);
         texts.VerticalAlignment = VerticalAlignment.Center;
+        texts.HorizontalAlignment = Loc.IsRtl ? HorizontalAlignment.Right : HorizontalAlignment.Left;
         row.Children.Add(texts);
 
         var border = new Border

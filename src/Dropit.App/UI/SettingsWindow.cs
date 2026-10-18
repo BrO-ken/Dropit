@@ -202,6 +202,7 @@ internal sealed class SettingsWindow : Window
                     (T("Windows", "Windows"), null),
                     (T("Dark glass", "زجاج داكن"), AppTheme.DarkGlass),
                     (T("Deep night", "ليل عميق"), AppTheme.DeepNight),
+                    (T("Mint", "نعناعي"), AppTheme.Mint),
                     (T("Light", "فاتح"), AppTheme.Light),
                 ],
                 _settings.Theme,

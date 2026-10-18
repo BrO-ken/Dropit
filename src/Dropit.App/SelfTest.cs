@@ -31,9 +31,11 @@ internal static class SelfTest
                          (Language.English, AppTheme.DarkGlass, "en"),
                          (Language.English, AppTheme.Light, "en-light"),
                          (Language.English, AppTheme.DeepNight, "en-night"),
+                         (Language.English, AppTheme.Mint, "en-mint"),
                          (Language.Arabic, AppTheme.DarkGlass, "ar"),
                          (Language.Arabic, AppTheme.Light, "ar-light"),
                          (Language.Arabic, AppTheme.DeepNight, "ar-night"),
+                         (Language.Arabic, AppTheme.Mint, "ar-mint"),
                      })
             {
                 Loc.Current = language;
@@ -200,6 +202,14 @@ private static void TestCaptionClosesWindow(List<string> log)
 
         var close = UI.Chrome.FindCloseButton(window);
         if (close is null || close.ActualWidth < 32 || close.ActualHeight < 28)
+        {
+            window.Close();
+            return false;
+        }
+        // DragMove() opens a modal loop and eats the mouse release, so a press the drag handler does
+        // not recognise is a button that can never be clicked. That is what kept these dead even after
+        // the caption strip was removed.
+        if (!UI.Chrome.IsOnControl(close))
         {
             window.Close();
             return false;

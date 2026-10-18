@@ -74,16 +74,25 @@ internal static class Chrome
         };
     }
 
-    private static bool IsOnControl(DependencyObject? start)
+    /// <summary>True when the press landed on something that must keep it, instead of starting a window drag.</summary>
+    internal static bool IsOnControl(DependencyObject? start)
     {
         for (var o = start; o is not null;)
         {
+            // The caption buttons are Borders, not ButtonBase, so they would fall through to the drag
+            // handler. DragMove opens a modal loop and swallows the release, so the click would never
+            // complete - which is exactly how these buttons ended up dead. Match them by tag.
+            if (o is FrameworkElement { Tag: CaptionButton })
+                return true;
             if (o is ButtonBase or ToggleButton or TextBox or ComboBox or Slider)
                 return true;
             o = o is Visual or System.Windows.Media.Media3D.Visual3D ? VisualTreeHelper.GetParent(o) : LogicalTreeHelper.GetParent(o);
         }
         return false;
     }
+
+    /// <summary>Marks an element as a caption button, so the drag handler leaves its clicks alone.</summary>
+    private const string CaptionButton = "dropit.caption-button";
 
     /// <summary>
     /// Clamps a window to the working area. A hard-coded 820px settings window is taller than the
@@ -173,6 +182,7 @@ internal static class Chrome
         var button = new Border
         {
             Name = name,
+            Tag = CaptionButton,
             Background = Brushes.Transparent,
             CornerRadius = new CornerRadius(6),
             Width = 40,
@@ -222,6 +232,7 @@ internal static class Chrome
         var button = new Border
         {
             Name = name,
+            Tag = CaptionButton,
             Background = Brushes.Transparent,
             CornerRadius = new CornerRadius(6),
             Width = 40,

@@ -14,6 +14,12 @@ public enum AppTheme
     DarkGlass,
     /// <summary>Near-black navy under a slow atmospheric wash, cool cyan hairlines.</summary>
     DeepNight,
+    /// <summary>
+    /// Deep navy under a mint accent. The palette, not the code, comes from Sahba on macOS: one accent
+    /// colour carries selection everywhere, on a three-stop navy-to-teal base, with surfaces built from
+    /// translucent white rather than coloured fills.
+    /// </summary>
+    Mint,
     /// <summary>A light surface with the same layering, for bright rooms.</summary>
     Light,
 }
@@ -78,6 +84,34 @@ internal static class Theme
         Accent2: Color.FromRgb(0x6E, 0x8C, 0xFF),
         TextOnAccent: Color.FromRgb(0x05, 0x0A, 0x14),
         Shadow: 0.62,
+        IsDark: true);
+
+    /// <summary>
+    /// Mint on deep navy. The accent is Sahba's <c>sahbaMint</c>, rgb(0.08, 0.72, 0.61). It is used
+    /// sparingly - selection, focus and progress - the way that project uses it, rather than as a
+    /// two-stop gradient painted over everything.
+    /// </summary>
+    private static readonly Palette MintPalette = new(
+        Backdrop: Color.FromArgb(0xF2, 0x06, 0x0A, 0x16),
+        Ambient: Color.FromArgb(0x00, 0x1C, 0x5E, 0x63),
+        AmbientStrength: 0.72,
+        Panel: Color.FromArgb(0xF6, 0x0A, 0x11, 0x22),
+        PanelEdge: Color.FromArgb(0x2E, 0x1A, 0xB2, 0x83),
+        Highlight: Color.FromArgb(0x24, 0xFF, 0xFF, 0xFF),
+        Card: Color.FromArgb(0xFF, 0x0E, 0x17, 0x2C),
+        CardEdge: Color.FromArgb(0x24, 0x1A, 0xB2, 0x83),
+        Slice: Color.FromArgb(0xF2, 0x14, 0x1E, 0x36),
+        SliceEdge: Color.FromArgb(0x1C, 0xFF, 0xFF, 0xFF),
+        Hub: Color.FromArgb(0xFF, 0x07, 0x0D, 0x1C),
+        Track: Color.FromArgb(0x2C, 0xB2, 0xC4, 0xFF),
+        Page: Color.FromArgb(0xFF, 0x07, 0x0B, 0x17),
+        Hover: Color.FromArgb(0x1C, 0x4D, 0xF5, 0xB8),
+        Text: Color.FromRgb(0xEB, 0xF0, 0xFF),
+        Muted: Color.FromRgb(0x8A, 0x9A, 0xB4),
+        Accent: Color.FromRgb(0x4A, 0xF2, 0xD6),
+        Accent2: Color.FromRgb(0x14, 0xB8, 0x9B),
+        TextOnAccent: Color.FromRgb(0x05, 0x26, 0x1F),
+        Shadow: 0.66,
         IsDark: true);
 
     private static readonly Palette LightPalette = new(
@@ -187,6 +221,7 @@ internal static class Theme
     {
         AppTheme.DarkGlass => DarkGlassPalette,
         AppTheme.DeepNight => DeepNightPalette,
+        AppTheme.Mint => MintPalette,
         AppTheme.Light => LightPalette,
         _ => ReadSystemDark() ? DarkGlassPalette : LightPalette,
     });
