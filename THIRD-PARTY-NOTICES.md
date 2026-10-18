@@ -1,6 +1,6 @@
 # Third-party software
 
-FileAction is MIT-licensed (see [LICENSE](LICENSE)). It uses the following software. Each keeps its own license.
+Dropit is MIT-licensed (see [LICENSE](LICENSE)). It uses the following software. Each keeps its own license.
 
 | Component | Used for | License |
 |---|---|---|
@@ -15,4 +15,4 @@ FileAction is MIT-licensed (see [LICENSE](LICENSE)). It uses the following softw
 | [Pandoc](https://pandoc.org) (Windows: downloaded on demand from [its releases](https://github.com/jgm/pandoc/releases)) | Documents | GPL-2.0-or-later – source: https://github.com/jgm/pandoc |
 | [LibreOffice](https://www.libreoffice.org) (optional, installed separately) | Office files → PDF | MPL-2.0 |
 
-FFmpeg and Pandoc are not part of the FileAction download. On Windows the app offers to fetch them from the sites above the first time you need them (into `%LOCALAPPDATA%\FileAction\tools`, checked against their published SHA-256); on Linux they come from your distribution. They run as separate programs; FileAction only calls them on the command line.
+FFmpeg and Pandoc are not part of the Dropit download. On Windows the app offers to fetch them from the sites above the first time you need them (into `%LOCALAPPDATA%\Dropit\tools`, checked against their published SHA-256); on Linux they come from your distribution. They run as separate programs; Dropit only calls them on the command line.

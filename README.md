@@ -1,10 +1,10 @@
-# FileAction
+# Dropit
 
 🇬🇧 **English** · 🇸🇦 [العربية](README.ar.md)
 
 **Click-free file conversion for Windows (and Linux).** Grab a file, tap a key while dragging, and drop it on a format in a radial wheel. Everything runs locally; your files never leave your PC.
 
-Inspired by the wonderful [Tangerine](https://tangerineformac.com/) for macOS. FileAction is an independent Windows take on the idea and is not affiliated with Tangerine.
+Inspired by the wonderful [Tangerine](https://tangerineformac.com/) for macOS. Dropit is an independent Windows take on the idea and is not affiliated with Tangerine.
 
 <p align="center">
   <img src="docs/screenshots/en/wheel-video-convert.png" width="32%" alt="Convert wheel for a video" />
@@ -37,7 +37,7 @@ The wheel stays open until you drop, so you can release the key and tap another 
 **Your own wheel:** in **Settings → Customize wheels** you can star favourite slices (they always come first, in the same place) and hide the ones you never use.
 
 **No mouse:** select files in File Explorer, or copy a file or a screenshot (**Win + Shift + S**), and press **Ctrl + Alt + Space**. Arrows pick a slice, Enter runs it, Tab switches wheels, Esc closes, 1–9 run a slice directly.
-You can also open the wheel with **right-click → FileAction…** (on Windows 11 under “Show more options”).
+You can also open the wheel with **right-click → Dropit…** (on Windows 11 under “Show more options”).
 
 Progress shows up in the corner of the screen, where you can open the result, show it in its folder or cancel.
 
@@ -63,92 +63,106 @@ Progress shows up in the corner of the screen, where you can open the result, sh
 - images and scanned PDFs: **extract text (OCR)** with the recognizer built into Windows; the text is saved as .txt and copied to the clipboard,
 - anything, folders included: archive to ZIP / TAR.GZ.
 
-Things that aren't files yet (images dragged from a browser, Outlook attachments, screenshots on the clipboard) are saved to **Downloads\FileAction** first, and the results go next to them.
+Things that aren't files yet (images dragged from a browser, Outlook attachments, screenshots on the clipboard) are saved to **Downloads\Dropit** first, and the results go next to them.
 
 With several files selected, each one is converted separately; tools like “merge” produce a single result.
 
 ### Helper programs
 
-FileAction handles images, PDFs, spreadsheets, subtitles and archives on its own. Some formats need extra programs:
+Dropit handles images, PDFs, spreadsheets, subtitles and archives on its own. Some formats need extra programs:
 
-- **FFmpeg** (audio and video, 34 MB) and **Pandoc** (documents, 35 MB) are downloaded the first time you need them: the wheel shows their slices dimmed with “get FFmpeg”, and dropping a file there asks once, downloads the tool (checked against its published SHA-256) and runs the conversion. If you already have them installed (e.g. `winget install Gyan.FFmpeg`), FileAction uses those,
+- **FFmpeg** (audio and video, 34 MB) and **Pandoc** (documents, 35 MB) are downloaded the first time you need them: the wheel shows their slices dimmed with “get FFmpeg”, and dropping a file there asks once, downloads the tool (checked against its published SHA-256) and runs the conversion. If you already have them installed (e.g. `winget install Gyan.FFmpeg`), Dropit uses those,
 - **LibreOffice** (DOC, PPTX, ODS, documents and spreadsheets to PDF) has to be installed separately: `winget install TheDocumentFoundation.LibreOffice`.
 
 **Settings → Helper programs** shows what is missing and can download or install it for you. Keeping the tools out of the installer keeps it under 50 MB.
 
 ## Install
 
-Download `FileAction-Setup-x.y.z.exe` from [Releases](../../releases), or from the artifacts of the latest [GitHub Actions](../../actions) run. The installer (under 50 MB) doesn't need admin rights. A portable `.zip` is available too.
+Download `Dropit-Setup-x.y.z.exe` from [Releases](../../releases), or from the artifacts of the latest [GitHub Actions](../../actions) run. The installer (under 50 MB) doesn't need admin rights. A portable `.zip` is available too.
 
-The app speaks English and Arabic and comes in light and dark mode; both follow your Windows settings, and the language can be switched in Settings. Arabic is laid out right to left.
+The app speaks English and Arabic, and the language can be switched in Settings. Arabic is laid out right to left.
 
-On first launch FileAction adds itself to startup and to the File Explorer context menu (both can be turned off in Settings). It then lives in the notification area next to the clock.
+### Home window
 
-**Updates** install themselves: FileAction asks GitHub for the latest release now and then (nothing about your files is sent), offers the update in a notification and the tray menu, verifies the installer's SHA-256 and installs it silently. You can turn the check off in Settings. The portable version opens the download page instead.
+Double-clicking `Dropit.exe` opens a window rather than a tray balloon: the three wheels with their keys, a drop target, a settings button and a close button. Drop files on it to open the wheel for their type, or press a row to open the wheel with whatever is on the clipboard. The window drags by its title strip and resizes from any edge.
+
+### Themes
+
+Three art directions plus *follow Windows*, switchable live in Settings → Appearance:
+
+- **Dark glass** — anthracite, layered translucent surfaces, thin luminous rims, a restrained amber glow.
+- **Deep night** — near-black navy under a slow atmospheric wash, cool cyan hairlines.
+- **Light** — the same layering on a light surface, for bright rooms.
+
+Every surface carries a token for its elevation — window backdrop, panel, card, control — plus a hairline and a one-pixel top highlight. That is what makes the panels read as stacked glass rather than flat grey boxes.
+
+On first launch Dropit adds itself to startup and to the File Explorer context menu (both can be turned off in Settings). It then lives in the notification area next to the clock.
+
+**Updates** install themselves: Dropit asks GitHub for the latest release now and then (nothing about your files is sent), offers the update in a notification and the tray menu, verifies the installer's SHA-256 and installs it silently. You can turn the check off in Settings. The portable version opens the download page instead.
 
 Requirements: Windows 10 (1809+) or Windows 11, x64.
 
 ## Linux
 
-**Arch Linux:** every release has a `PKGBUILD` attached (the `fileaction-bin` package). Download it into an empty folder and run `makepkg -si`. The package is coming to the AUR (`yay -S fileaction-bin`) as soon as AUR account registration reopens.
+**Arch Linux:** every release has a `PKGBUILD` attached (the `dropit-bin` package). Download it into an empty folder and run `makepkg -si`. The package is coming to the AUR (`yay -S dropit-bin`) as soon as AUR account registration reopens.
 
-**Other distributions:** download `FileAction-x.y.z-linux-x64.tar.xz` (about 32 MB) from [Releases](../../releases), unpack it and run `fileaction/app/fileaction` (no .NET needed).
+**Other distributions:** download `Dropit-x.y.z-linux-x64.tar.xz` (about 32 MB) from [Releases](../../releases), unpack it and run `dropit/app/dropit` (no .NET needed).
 
 Linux doesn't let apps watch the keyboard and mouse of other programs (Wayland forbids it on purpose), so the "drag and tap a key" gesture is Windows-only. On Linux you use the same wheel like this:
 
-- **Drop zone:** run `fileaction` (or *FileAction* from the app menu) and drag files onto the wheel. It stays on screen; move it by its middle.
-- **Right-click in the file manager:** `fileaction integrate` adds *FileAction…* to Nautilus (*Scripts* submenu), Dolphin and Nemo (the AUR package installs Dolphin and Nemo for everyone).
+- **Drop zone:** run `dropit` (or *Dropit* from the app menu) and drag files onto the wheel. It stays on screen; move it by its middle.
+- **Right-click in the file manager:** `dropit integrate` adds *Dropit…* to Nautilus (*Scripts* submenu), Dolphin and Nemo (the AUR package installs Dolphin and Nemo for everyone).
 - **Command line** and keyboard shortcuts of your desktop:
 
   ```sh
-  fileaction photo.heic                       # the wheel for this file
-  fileaction list photo.heic                  # what can be done with it
-  fileaction run image.to.webp *.heic         # do it, no window
-  fileaction run video.trim clip.mov --param start=0:10 --param end=0:25
+  dropit photo.heic                       # the wheel for this file
+  dropit list photo.heic                  # what can be done with it
+  dropit run image.to.webp *.heic         # do it, no window
+  dropit run video.trim clip.mov --param start=0:10 --param end=0:25
   ```
 
-Optional packages: `ffmpeg` (audio, video), `pandoc-cli` (documents), `libreoffice-fresh` (Office files), `tesseract` + `tesseract-data-eng` (extract text). Settings live in `~/.config/fileaction/settings.json`.
+Optional packages: `ffmpeg` (audio, video), `pandoc-cli` (documents), `libreoffice-fresh` (Office files), `tesseract` + `tesseract-data-eng` (extract text). Settings live in `~/.config/dropit/settings.json`.
 
 ## Build from source
 
 ```powershell
 # .NET 10 SDK
 ./scripts/fetch-tools.ps1                      # downloads ffmpeg.exe and pandoc.exe into .\tools (for the tests)
-$env:PATH = "$PWD\tools;$env:PATH"; dotnet test tests/FileAction.Tests
-dotnet publish src/FileAction.App -c Release -r win-x64 --self-contained -o publish   # trimmed, ~165 MB unpacked
-publish\FileAction.exe
+$env:PATH = "$PWD\tools;$env:PATH"; dotnet test tests/Dropit.Tests
+dotnet publish src/Dropit.App -c Release -r win-x64 --self-contained -o publish   # trimmed, ~165 MB unpacked
+publish\Dropit.exe
 ```
 
-`FileAction.exe --self-test <folder>` builds every window offscreen and saves PNG previews in both languages, including right-to-left layouts (used by CI).
+`Dropit.exe --self-test <folder>` builds every window offscreen and saves PNG previews in both languages, including right-to-left layouts (used by CI).
 
 ### Releasing
 
 Push a commit to `main` whose message starts with `Release v1.2.3` (or run the **Build** workflow manually with a version). CI builds the installer and zip and publishes them as a GitHub release. Add a repository secret `RELEASE_TOKEN` (a fine-grained personal access token with *Contents: read and write* on this repository) to publish releases under your own account instead of github-actions.
 
-The same run builds the Linux tarball, installs the AUR package on Arch Linux to test it and, when the `AUR_SSH_PRIVATE_KEY` secret holds the key of the AUR account that maintains `fileaction-bin`, pushes the updated PKGBUILD to the AUR.
+The same run builds the Linux tarball, installs the AUR package on Arch Linux to test it and, when the `AUR_SSH_PRIVATE_KEY` secret holds the key of the AUR account that maintains `dropit-bin`, pushes the updated PKGBUILD to the AUR.
 
 ## Project layout
 
 ```
-src/FileAction.Core     conversions and tools (cross-platform library, also tested on Linux)
+src/Dropit.Core     conversions and tools (cross-platform library, also tested on Linux)
   Backends/             ImageMagick, FFmpeg, Pandoc, LibreOffice, PDF, spreadsheets, subtitles, archives
   Operations/Catalog.cs every slice on the Convert and Tools wheels
   Loc.cs                English / Arabic strings
-src/FileAction.Linux    the Linux app (Avalonia): drop zone, wheel, CLI, file manager integration
-src/FileAction.App      the Windows app (WPF)
+src/Dropit.Linux    the Linux app (Avalonia): drop zone, wheel, CLI, file manager integration
+src/Dropit.App      the Windows app (WPF)
   Input/GlobalInput.cs  global mouse and keyboard hooks (the “drag + tap” gesture)
   Wheel/                the radial menu and when it opens
   Actions/              the Actions wheel, floating shelf, sharing
   Jobs/                 background jobs and progress cards
   Shell/                tray icon, hotkey, context menu, single instance
-tests/FileAction.Tests  unit tests plus integration tests that run every operation on sample files
+tests/Dropit.Tests  unit tests plus integration tests that run every operation on sample files
 installer/              Inno Setup
 packaging/              Linux tarball and the AUR PKGBUILD template
 ```
 
 ## License
 
-[MIT](LICENSE). FileAction uses other open-source components under their own licenses; see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+[MIT](LICENSE). Dropit uses other open-source components under their own licenses; see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 ## Differences from Tangerine
 

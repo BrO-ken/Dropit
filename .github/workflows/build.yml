@@ -58,7 +58,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg pandoc libreoffice-writer libreoffice-calc libreoffice-impress
       - name: Test
-        run: dotnet test tests/FileAction.Tests -c Release --logger "console;verbosity=normal"
+        run: dotnet test tests/Dropit.Tests -c Release --logger "console;verbosity=normal"
 
   windows:
     name: Windows build, tests and installer
@@ -82,19 +82,19 @@ jobs:
         shell: pwsh
         run: |
           $env:PATH = "$PWD\tools;$env:PATH"
-          dotnet test tests/FileAction.Tests -c Release --logger "console;verbosity=normal"
+          dotnet test tests/Dropit.Tests -c Release --logger "console;verbosity=normal"
 
       - name: Publish
         shell: pwsh
         run: |
-          dotnet publish src/FileAction.App/FileAction.App.csproj -c Release -r win-x64 --self-contained -p:Version=$env:VERSION -o publish
+          dotnet publish src/Dropit.App/Dropit.App.csproj -c Release -r win-x64 --self-contained -p:Version=$env:VERSION -o publish
           Copy-Item LICENSE, THIRD-PARTY-NOTICES.md publish/
 
       - name: UI self-test
         shell: pwsh
         run: |
           $out = Join-Path $PWD 'self-test'
-          $p = Start-Process -FilePath "$PWD\publish\FileAction.exe" -ArgumentList '--self-test', "`"$out`"" -Wait -PassThru
+          $p = Start-Process -FilePath "$PWD\publish\Dropit.exe" -ArgumentList '--self-test', "`"$out`"" -Wait -PassThru
           Get-Content (Join-Path $out 'self-test.txt') -ErrorAction Continue
           if ($p.ExitCode -ne 0) {
             # A crash that bypasses .NET exception handling is only reported in the event log.
@@ -110,16 +110,16 @@ jobs:
           Get-ChildItem publish -File | Sort-Object Length -Descending | Select-Object -First 8 | ForEach-Object { "  {0}: {1:N1} MB" -f $_.Name, ($_.Length / 1MB) }
 
           # Start like after sign-in (no first-run window) and sample memory and CPU while idle.
-          New-Item -ItemType Directory -Force "$env:APPDATA\FileAction" | Out-Null
-          '{ "FirstRunDone": true, "CheckForUpdates": false }' | Set-Content "$env:APPDATA\FileAction\settings.json"
-          $p = Start-Process -FilePath "$PWD\publish\FileAction.exe" -ArgumentList '--background' -PassThru
+          New-Item -ItemType Directory -Force "$env:APPDATA\Dropit" | Out-Null
+          '{ "FirstRunDone": true, "CheckForUpdates": false }' | Set-Content "$env:APPDATA\Dropit\settings.json"
+          $p = Start-Process -FilePath "$PWD\publish\Dropit.exe" -ArgumentList '--background' -PassThru
           Start-Sleep -Seconds 15
           $p.Refresh(); $cpu1 = $p.TotalProcessorTime
           Start-Sleep -Seconds 30
           $p.Refresh()
           "Idle after 45 s: working set {0:N1} MB, private {1:N1} MB, CPU while idle {2:N2} s in 30 s" -f ($p.WorkingSet64 / 1MB), ($p.PrivateMemorySize64 / 1MB), ($p.TotalProcessorTime - $cpu1).TotalSeconds
           Stop-Process -Id $p.Id -Force
-          Remove-Item "$env:APPDATA\FileAction" -Recurse -Force
+          Remove-Item "$env:APPDATA\Dropit" -Recurse -Force
 
       - name: Installer and zip
         shell: pwsh
@@ -129,17 +129,17 @@ jobs:
             choco install innosetup -y --no-progress --require-checksums
           }
           New-Item -ItemType Directory -Force artifacts | Out-Null
-          & $iscc "/DAppVersion=$env:VERSION" installer/FileAction.iss
+          & $iscc "/DAppVersion=$env:VERSION" installer/Dropit.iss
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
-          7z a -tzip -mx=9 "artifacts/FileAction-$env:VERSION-win-x64.zip" ./publish/* | Out-Null
+          7z a -tzip -mx=9 "artifacts/Dropit-$env:VERSION-win-x64.zip" ./publish/* | Out-Null
           if ($LASTEXITCODE -ne 0) { throw "7-Zip failed" }
           Get-ChildItem artifacts | ForEach-Object { "{0}  {1:N1} MB" -f $_.Name, ($_.Length / 1MB) }
-          $setup = Get-Item "artifacts/FileAction-Setup-$env:VERSION.exe"
+          $setup = Get-Item "artifacts/Dropit-Setup-$env:VERSION.exe"
           if ($setup.Length -gt 50MB) { throw ("The installer grew to {0:N1} MB (limit 50 MB)" -f ($setup.Length / 1MB)) }
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: FileAction-windows
+          name: Dropit-windows
           path: artifacts/*
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -160,15 +160,15 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Publish
-        run: dotnet publish src/FileAction.Linux/FileAction.Linux.csproj -c Release -r linux-x64 --self-contained -p:Version=$VERSION -o publish-linux
+        run: dotnet publish src/Dropit.Linux/Dropit.Linux.csproj -c Release -r linux-x64 --self-contained -p:Version=$VERSION -o publish-linux
       - name: Self-test and command line
         run: |
-          ./publish-linux/fileaction --version
-          ./publish-linux/fileaction --self-test self-test-linux
+          ./publish-linux/dropit --version
+          ./publish-linux/dropit --self-test self-test-linux
           cat self-test-linux/self-test.txt
           cp self-test-linux/en/wheel-actions.png /tmp/sample.png
-          ./publish-linux/fileaction list /tmp/sample.png
-          ./publish-linux/fileaction run image.to.jpg /tmp/sample.png
+          ./publish-linux/dropit list /tmp/sample.png
+          ./publish-linux/dropit run image.to.jpg /tmp/sample.png
           test -s /tmp/sample.jpg
       - name: Package
         run: |
@@ -179,7 +179,7 @@ jobs:
           if [ "$size" -gt $((50 * 1024 * 1024)) ]; then echo "The tarball grew to $((size / 1048576)) MB (limit 50 MB)"; exit 1; fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: FileAction-linux
+          name: Dropit-linux
           path: dist/*
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
@@ -197,7 +197,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: FileAction-linux
+          name: Dropit-linux
           path: dist
       - name: Build and install with makepkg
         run: |
@@ -211,14 +211,14 @@ jobs:
           chown -R builder /build
           (source /build/PKGBUILD && pacman -S --noconfirm --needed "${depends[@]}")
           su builder -c "cd /build && makepkg --noconfirm"
-          pacman -U --noconfirm /build/fileaction-bin-*.pkg.tar.zst
+          pacman -U --noconfirm /build/dropit-bin-*.pkg.tar.zst
       - name: Run the installed app
         run: |
-          fileaction --version
-          test -f /usr/share/applications/fileaction.desktop
-          test -f /usr/share/kio/servicemenus/fileaction.desktop
-          su builder -c "fileaction --self-test /tmp/arch-self-test" && cat /tmp/arch-self-test/self-test.txt
-          su builder -c "cp /tmp/arch-self-test/en/wheel-image-convert.png /tmp/sample.png && fileaction run image.to.webp /tmp/sample.png && test -s /tmp/sample.webp"
+          dropit --version
+          test -f /usr/share/applications/dropit.desktop
+          test -f /usr/share/kio/servicemenus/dropit.desktop
+          su builder -c "dropit --self-test /tmp/arch-self-test" && cat /tmp/arch-self-test/self-test.txt
+          su builder -c "cp /tmp/arch-self-test/en/wheel-image-convert.png /tmp/sample.png && dropit run image.to.webp /tmp/sample.png && test -s /tmp/sample.webp"
       - name: AUR metadata
         run: |
           mkdir -p aur
@@ -244,11 +244,11 @@ release:
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: FileAction-windows
+          name: Dropit-windows
           path: artifacts
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: FileAction-linux
+          name: Dropit-linux
           path: linux
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
@@ -276,7 +276,7 @@ release:
           token: ${{ steps.token.outputs.usable == 'true' && secrets.RELEASE_TOKEN || github.token }}
           tag_name: v${{ env.VERSION }}
           target_commitish: ${{ github.sha }}
-          name: FileAction ${{ env.VERSION }}
+          name: Dropit ${{ env.VERSION }}
           generate_release_notes: true
           overwrite_files: true
           files: |
@@ -290,7 +290,7 @@ release:
           token: ${{ github.token }}
           tag_name: v${{ env.VERSION }}
           target_commitish: ${{ github.sha }}
-          name: FileAction ${{ env.VERSION }}
+          name: Dropit ${{ env.VERSION }}
           generate_release_notes: true
           overwrite_files: true
           files: |
@@ -308,7 +308,7 @@ release:
           chmod 600 ~/.ssh/aur
           ssh-keyscan -t ed25519,rsa aur.archlinux.org >> ~/.ssh/known_hosts 2>/dev/null
           export GIT_SSH_COMMAND="ssh -i ~/.ssh/aur -o IdentitiesOnly=yes"
-          git clone ssh://aur@aur.archlinux.org/fileaction-bin.git aur-repo
+          git clone ssh://aur@aur.archlinux.org/dropit-bin.git aur-repo
           cp aur/PKGBUILD aur/.SRCINFO aur-repo/
           cd aur-repo
           git add PKGBUILD .SRCINFO

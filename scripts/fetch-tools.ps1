@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Downloads ffmpeg.exe and pandoc.exe into a folder (default: .\tools) so they can ship next to FileAction.exe.
+  Downloads ffmpeg.exe and pandoc.exe into a folder (default: .\tools) so they can ship next to Dropit.exe.
 .EXAMPLE
   ./scripts/fetch-tools.ps1
   ./scripts/fetch-tools.ps1 -Destination publish\tools
@@ -14,10 +14,10 @@ $ProgressPreference = 'SilentlyContinue'
 
 New-Item -ItemType Directory -Force -Path $Destination | Out-Null
 $Destination = (Resolve-Path $Destination).Path
-$temp = Join-Path ([IO.Path]::GetTempPath()) ("fileaction-tools-" + [guid]::NewGuid().ToString('N'))
+$temp = Join-Path ([IO.Path]::GetTempPath()) ("dropit-tools-" + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $temp | Out-Null
 
-$headers = @{ 'User-Agent' = 'FileAction-build' }
+$headers = @{ 'User-Agent' = 'Dropit-build' }
 if ($env:GITHUB_TOKEN) { $headers['Authorization'] = "Bearer $($env:GITHUB_TOKEN)" }
 
 function Get-Zip([string]$Url, [string]$Name) {
