@@ -59,7 +59,7 @@ internal sealed class SettingsWindow : Window
     {
         if (_open is not null)
         {
-            _open.Activate();
+            // Activate() on a minimised window does nothing visible: the window stays in the             // taskbar and nothing appears. Restore it before bringing it forward.             if (_open.WindowState == WindowState.Minimized)                 _open.WindowState = WindowState.Normal;             _open.Show();             _open.Activate();
             return;
         }
         _open = new SettingsWindow(settings, tools, changed);

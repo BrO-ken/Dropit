@@ -118,13 +118,13 @@ internal static class Chrome
     {
         if (minimisable)
         {
-            var min = GlyphButton("\uE921", T("Minimize", "تصغير"), "", close: false);
+            var min = IconButton("\uE921", T("Minimize", "تصغير"), () => window.WindowState = WindowState.Minimized);
             min.MouseLeftButtonUp += (_, _) => window.WindowState = WindowState.Minimized;
             DockPanel.SetDock(min, Loc.IsRtl ? Dock.Left : Dock.Right);
             yield return min;
         }
 
-        var close = GlyphButton(Glyphs.Close, T("Close", "إغلاق"), "CaptionClose", close: true);
+        var close = IconButton(Glyphs.Close, T("Close", "إغلاق"), () => window.Close(), "CaptionClose", destructive: true);
         close.MouseLeftButtonUp += (_, _) => window.Close();
         DockPanel.SetDock(close, Loc.IsRtl ? Dock.Left : Dock.Right);
         yield return close;
@@ -162,9 +162,9 @@ internal static class Chrome
     }
 
     /// <summary>
-    /// Any button that lives in the caption strip: a glyph, a generous hit area, an obvious hover, and
-    /// the hit-test opt-out from the chrome. Every window that draws its own caption must build its
-    /// buttons here - a copy of this without the last line is a picture, not a button.
+    /// Any button that lives in the caption strip: a glyph, a generous hit area, an obvious hover, and a
+    /// mouse capture on press. The capture is the part that matters - without it a press followed by a
+    /// release a pixel away never completes the click, which is what made these feel unreliable.
     /// </summary>
     public static Border IconButton(string glyph, string tip, Action click, string name = "", bool destructive = false)
     {
@@ -172,7 +172,7 @@ internal static class Chrome
         {
             Text = glyph,
             FontFamily = Theme.Icons,
-            FontSize = 11,
+            FontSize = 12,
             Foreground = Theme.Muted,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
@@ -185,68 +185,17 @@ internal static class Chrome
             Tag = CaptionButton,
             Background = Brushes.Transparent,
             CornerRadius = new CornerRadius(6),
-            Width = 40,
+            Width = 44,
             Height = 32,
-            Margin = new Thickness(2, 2, 2, 4),
+            Margin = new Thickness(2, 3, 2, 3),
             Cursor = Cursors.Hand,
             ToolTip = tip,
             Child = icon,
-            Focusable = false,
-        };
-        button.MouseEnter += (_, _) =>
-        {
-            button.Background = destructive ? Theme.AccentRed : Theme.Hover;
-            icon.Foreground = destructive ? Brushes.White : Theme.Text;
-        };
-        button.MouseLeave += (_, _) =>
-        {
-            button.Background = Brushes.Transparent;
-            icon.Foreground = Theme.Muted;
-        };
-        button.MouseLeftButtonUp += (_, e) =>
-        {
-            e.Handled = true;
-            click();
-        };
-        return button;
-    }
-
-    /// <summary>
-    /// A caption button. Two things make it feel grabbable: the hit area covers the whole strip height
-    /// instead of hugging a 10px glyph, and the hover state is obvious. Close additionally turns red,
-    /// which is the one place in a window where a colour carries meaning.
-    /// </summary>
-    private static Border GlyphButton(string glyph, string tip, string name, bool close)
-    {
-        var icon = new TextBlock
-        {
-            Text = glyph,
-            FontFamily = Theme.Icons,
-            FontSize = 11,
-            Foreground = Theme.Muted,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            // The glyph must not eat the clicks meant for the padding around it.
-            IsHitTestVisible = false,
-        };
-        var button = new Border
-        {
-            Name = name,
-            Tag = CaptionButton,
-            Background = Brushes.Transparent,
-            CornerRadius = new CornerRadius(6),
-            Width = 40,
-            Height = 32,
-            Margin = new Thickness(2, 2, 2, 4),
-            Cursor = Cursors.Hand,
-            ToolTip = tip,
-            Child = icon,
-            Focusable = false,
         };
         void Enter()
         {
-            button.Background = close ? Theme.AccentRed : Theme.Hover;
-            icon.Foreground = close ? Brushes.White : Theme.Text;
+            button.Background = destructive ? Theme.AccentRed : Theme.Hover;
+            icon.Foreground = destructive ? Brushes.White : Theme.Text;
         }
         void Leave()
         {
@@ -255,9 +204,19 @@ internal static class Chrome
         }
         button.MouseEnter += (_, _) => Enter();
         button.MouseLeave += (_, _) => Leave();
-        // Without this the WindowChrome keeps the hit test for the drag gesture and the button is
-        // only a picture: no hover, no click.
+        button.MouseLeftButtonDown += (_, e) =>
+        {
+            e.Handled = true;
+            button.CaptureMouse();
+        };
+        button.MouseLeftButtonUp += (_, e) =>
+        {
+            e.Handled = true;
+            button.ReleaseMouseCapture();
+            click();
+        };
         return button;
     }
 
+    /// <summary>
 }

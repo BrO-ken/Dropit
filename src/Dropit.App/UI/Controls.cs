@@ -209,8 +209,8 @@ internal static class Controls
         var on = value;
         void Paint(bool animate)
         {
-            track.Background = on ? Theme.AccentGradient : Brushes.Transparent;
-            track.BorderBrush = on ? Brushes.Transparent : Theme.Muted;
+            track.Background = on ? Theme.AccentGradient : Theme.Track;
+            track.BorderBrush = on ? Brushes.Transparent : Theme.Border;
             knob.Fill = on ? Brushes.White : Theme.Muted;
             // Right-aligned knob already sits at the far end, so travel is negative.
             var x = rtl
@@ -334,12 +334,19 @@ internal static class Controls
         return button;
     }
 
+    /// <summary>A flat wash of a status colour: dark enough to read as a tint, light enough for the label.</summary>
+    private static SolidColorBrush Tint(Brush source, byte alpha)
+    {
+        var c = (source as SolidColorBrush)?.Color ?? Colors.Gray;
+        return new SolidColorBrush(Color.FromArgb(alpha, c.R, c.G, c.B));
+    }
+
     /// <summary>A small coloured status label, e.g. "found" / "missing".</summary>
     public static Border Badge(string text, bool good) => new()
     {
         CornerRadius = new CornerRadius(6),
         Padding = new Thickness(8, 2, 8, 3),
-        Background = new SolidColorBrush(Color.FromArgb(0x26, good ? (byte)0x3C : (byte)0xF0, good ? (byte)0xC3 : (byte)0x5A, good ? (byte)0x6E : (byte)0x5A)),
+        Background = Tint(good ? Theme.Success : Theme.Error, Theme.IsDark ? (byte)0x2E : (byte)0x1F),
         Child = new TextBlock { Text = text, FontSize = Type(11.5), FontWeight = FontWeights.SemiBold, Foreground = good ? Theme.Success : Theme.Error },
     };
 }

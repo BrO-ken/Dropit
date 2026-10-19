@@ -57,6 +57,8 @@ internal static class Theme
         Hover: Color.FromArgb(0x14, 0xFF, 0xFF, 0xFF),
         Text: Color.FromRgb(0xF5, 0xF5, 0xF7),
         Muted: Color.FromRgb(0x9B, 0x9B, 0xA8),
+        Success: Color.FromRgb(0x3C, 0xC3, 0x6E),
+        Error: Color.FromRgb(0xF0, 0x5A, 0x5A),
         Accent: Color.FromRgb(0xFF, 0x9F, 0x3D),
         Accent2: Color.FromRgb(0xFF, 0x5F, 0x63),
         TextOnAccent: Colors.White,
@@ -80,6 +82,8 @@ internal static class Theme
         Hover: Color.FromArgb(0x16, 0x9C, 0xD8, 0xFF),
         Text: Color.FromRgb(0xEC, 0xF3, 0xFA),
         Muted: Color.FromRgb(0x86, 0x93, 0xA8),
+        Success: Color.FromRgb(0x2F, 0xD4, 0xA0),
+        Error: Color.FromRgb(0xFF, 0x7A, 0x7A),
         Accent: Color.FromRgb(0x4C, 0xD5, 0xE8),
         Accent2: Color.FromRgb(0x6E, 0x8C, 0xFF),
         TextOnAccent: Color.FromRgb(0x05, 0x0A, 0x14),
@@ -108,6 +112,8 @@ internal static class Theme
         Hover: Color.FromArgb(0x1C, 0x4D, 0xF5, 0xB8),
         Text: Color.FromRgb(0xEB, 0xF0, 0xFF),
         Muted: Color.FromRgb(0x8A, 0x9A, 0xB4),
+        Success: Color.FromRgb(0x3C, 0xE0, 0x9A),
+        Error: Color.FromRgb(0xFF, 0x6B, 0x6B),
         Accent: Color.FromRgb(0x4A, 0xF2, 0xD6),
         Accent2: Color.FromRgb(0x14, 0xB8, 0x9B),
         TextOnAccent: Color.FromRgb(0x05, 0x26, 0x1F),
@@ -126,13 +132,16 @@ internal static class Theme
         Slice: Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF),
         SliceEdge: Color.FromArgb(0x10, 0x00, 0x00, 0x00),
         Hub: Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF),
-        Track: Color.FromArgb(0x18, 0x00, 0x00, 0x00),
+        Track: Color.FromArgb(0xFF, 0xE4, 0xE4, 0xEC),
         Page: Color.FromArgb(0xFF, 0xF1, 0xF1, 0xF5),
         Hover: Color.FromArgb(0x0C, 0x00, 0x00, 0x00),
         Text: Color.FromRgb(0x1A, 0x1A, 0x21),
-        Muted: Color.FromRgb(0x6B, 0x6B, 0x77),
-        Accent: Color.FromRgb(0xE0, 0x77, 0x1F),
-        Accent2: Color.FromRgb(0xD8, 0x43, 0x50),
+        Muted: Color.FromRgb(0x5C, 0x5C, 0x69),
+        Success: Color.FromRgb(0x11, 0x76, 0x42),
+        Error: Color.FromRgb(0xB4, 0x26, 0x1B),
+        // Dark enough for white label text: the previous pair sat near 2.6:1 on white.
+        Accent: Color.FromRgb(0xB8, 0x5A, 0x0A),
+        Accent2: Color.FromRgb(0x9E, 0x2F, 0x1C),
         TextOnAccent: Colors.White,
         Shadow: 0.20,
         IsDark: false);
@@ -154,6 +163,8 @@ internal static class Theme
         Color Hover,
         Color Text,
         Color Muted,
+        Color Success,
+        Color Error,
         Color Accent,
         Color Accent2,
         Color TextOnAccent,
@@ -187,6 +198,9 @@ internal static class Theme
     public static Color HighlightColor { get; private set; }
     public static Brush Card { get; private set; } = null!;
     public static Brush CardBorder { get; private set; } = null!;
+
+    /// <summary>Border for controls that have to read as a line on any surface.</summary>
+    public static Brush Border { get; private set; } = null!;
     public static Brush Slice { get; private set; } = null!;
     public static Brush SliceBorder { get; private set; } = null!;
     public static Brush Hub { get; private set; } = null!;
@@ -238,6 +252,7 @@ internal static class Theme
         AccentRed = Freeze(new SolidColorBrush(Color.FromRgb(0xC4, 0x2B, 0x1C)));
         Card = Freeze(new SolidColorBrush(palette.Card));
         CardBorder = Freeze(new SolidColorBrush(palette.CardEdge));
+        Border = Freeze(new SolidColorBrush(palette.IsDark ? Color.FromArgb(0x30, 0xFF, 0xFF, 0xFF) : Color.FromArgb(0x28, 0x00, 0x00, 0x00)));
         Slice = Freeze(new SolidColorBrush(palette.Slice));
         SliceBorder = Freeze(new SolidColorBrush(palette.SliceEdge));
         Hub = Freeze(new SolidColorBrush(palette.Hub));
@@ -251,8 +266,8 @@ internal static class Theme
         AccentSoft = Freeze(new SolidColorBrush(Color.FromArgb(
             palette.IsDark ? (byte)0x38 : (byte)0x22, palette.Accent.R, palette.Accent.G, palette.Accent.B)));
         AccentGradient = Freeze(new LinearGradientBrush(palette.Accent, palette.Accent2, new Point(0, 0), new Point(1, 1)));
-        Success = Freeze(new SolidColorBrush(Color.FromRgb(0x3C, 0xC3, 0x6E)));
-        Error = Freeze(new SolidColorBrush(Color.FromRgb(0xF0, 0x5A, 0x5A)));
+        Success = Freeze(new SolidColorBrush(palette.Success));
+        Error = Freeze(new SolidColorBrush(palette.Error));
         Ambient = Freeze(new RadialGradientBrush
         {
             GradientOrigin = new Point(0.5, 0.18),
