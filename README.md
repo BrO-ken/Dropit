@@ -88,17 +88,42 @@ Double-clicking `Dropit.exe` opens a window rather than a tray balloon: the thre
 
 ### Themes
 
-Three art directions plus *follow Windows*, switchable live in Settings → Appearance:
+Five art directions plus *follow Windows*, switchable live in Settings → Appearance:
 
 - **Dark glass** — anthracite, layered translucent surfaces, thin luminous rims, a restrained amber glow.
 - **Deep night** — near-black navy under a slow atmospheric wash, cool cyan hairlines.
+- **Mint** — deep navy under a mint accent, the palette of the macOS app this was modelled on.
 - **Light** — the same layering on a light surface, for bright rooms.
+- **Warm** — warm paper neutrals with a vivid orange accent, the palette of Tangerine on macOS.
 
 Every surface carries a token for its elevation — window backdrop, panel, card, control — plus a hairline and a one-pixel top highlight. That is what makes the panels read as stacked glass rather than flat grey boxes.
 
+**Softness** is one slider that rounds every corner by the same amount, so the whole app can read as soft or as sharp without anything else changing. **Less movement** leaves the animations out; the app behaves the same, it just stops moving.
+
+#### Your own colours
+
+Put a `theme.json` in `%APPDATA%\Dropit` (next to `settings.json`) and the app paints itself with your colours:
+
+```json
+{
+  "Warm": {
+    "accent": "#7A2BD1",
+    "accent2": "#4C108C",
+    "page": "#F2EFF7",
+    "card": "#FBFAFD"
+  }
+}
+```
+
+- The top level holds the theme names, each with the colour slots you want to change. `DarkGlass`, `DeepNight`, `Mint`, `Light` and `Warm` are the names.
+- The slots are `backdrop`, `ambient`, `panel`, `panelEdge`, `highlight`, `card`, `cardEdge`, `slice`, `sliceEdge`, `hub`, `track`, `page`, `hover`, `text`, `muted`, `success`, `error`, `accent`, `accent2` and `textOnAccent`.
+- Colours are `#RRGGBB` or `#AARRGGBB`. Anything you leave out keeps the colour the app ships with, so one line changes one thing.
+- A slot name that does not exist, a value that is not a colour, and a theme name the app does not know are ignored and reported in Settings → Appearance.
+- The file is never rewritten by the app. Delete it and the built-in colours come back.
+
 On first launch Dropit adds itself to startup and to the File Explorer context menu (both can be turned off in Settings). It then lives in the notification area next to the clock.
 
-**Updates** install themselves: Dropit asks GitHub for the latest release now and then (nothing about your files is sent), offers the update in a notification and the tray menu, verifies the installer's SHA-256 and installs it silently. You can turn the check off in Settings. The portable version opens the download page instead.
+**Updates** install themselves: Dropit asks GitHub for the latest release now and then (nothing about your files is sent), offers the update in a notification and the tray menu, verifies the installer's SHA-256 and installs it silently. Clicking the notification opens a window that says what is being installed and shows the download as it goes. You can turn the check off in Settings. The portable version opens the download page instead.
 
 Requirements: Windows 10 (1809+) or Windows 11, x64.
 

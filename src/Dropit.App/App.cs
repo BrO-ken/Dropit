@@ -69,6 +69,11 @@ internal sealed class App : Application
         Loc.Current = _settings.Language ?? Loc.Detect();
         // The saved theme has to be applied before anything builds its brushes from it.
         Theme.Override = _settings.Theme;
+        Theme.SetRadius(_settings.CornerRadius);
+        Theme.ReduceMotion = _settings.ReduceMotion;
+        var themeProblems = new List<string>();
+        Theme.Custom = AppSettings.LoadCustomTheme(themeProblems);
+        Theme.CustomProblems = themeProblems;
         Theme.Refresh();
         _tools = new ToolLocator();
         var jobs = new JobRunner(_settings, _tools);
@@ -98,7 +103,7 @@ internal sealed class App : Application
         _tray = CreateTray();
         SettingsWindow.Updater = _updater;
         SettingsWindow.Operations = () => _controller.AllOperations;
-        _updater.StartBackgroundChecks(_settings, update => _tray?.OfferUpdate(update.Version, () => _ = _updater.InstallAsync(update)));
+        _updater.StartBackgroundChecks(_settings, update => _tray?.OfferUpdate(update.Version, () => UI.UpdateNoticeWindow.Show(_updater, update)));
         _hotkey = new HotkeyListener(_controller.OnHotkey);
         ApplyHotkey();
         _instance.Listen(Dispatcher, HandleArgs);
@@ -153,7 +158,7 @@ internal sealed class App : Application
     {
         var tray = new TrayIcon(OpenSettings, () => _controller.OpenForClipboard(), () => ShelfWindow.Open([]), ShowHelp, SetPaused, _settings.Paused, () => Shutdown());
         if (_updater.Available is { } update)
-            tray.OfferUpdate(update.Version, () => _ = _updater.InstallAsync(update));
+            tray.OfferUpdate(update.Version, () => UI.UpdateNoticeWindow.Show(_updater, update));
         return tray;
     }
 
@@ -185,6 +190,23 @@ internal sealed class App : Application
         ApplyHotkey();
         if (_tray is not null)
             _tray.Paused = _settings.Paused;
+        ApplyAppearance();
+    }
+
+    /// <summary>
+    /// Applies the appearance settings: the theme, the corner radius, less movement, and the user's theme file
+    /// if there is one. The file is read again here, so editing it and changing any setting is enough to see
+    /// the new colours.
+    /// </summary>
+    private void ApplyAppearance()
+    {
+        Theme.Override = _settings.Theme;
+        Theme.SetRadius(_settings.CornerRadius);
+        Theme.ReduceMotion = _settings.ReduceMotion;
+        var problems = new List<string>();
+        Theme.Custom = AppSettings.LoadCustomTheme(problems);
+        Theme.CustomProblems = problems;
+        Theme.Refresh();
     }
 
     /// <summary>

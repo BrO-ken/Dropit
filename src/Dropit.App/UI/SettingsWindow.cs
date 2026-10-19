@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
@@ -59,7 +60,7 @@ internal sealed class SettingsWindow : Window
     {
         if (_open is not null)
         {
-            // Activate() on a minimised window does nothing visible: the window stays in the             // taskbar and nothing appears. Restore it before bringing it forward.             if (_open.WindowState == WindowState.Minimized)                 _open.WindowState = WindowState.Normal;             _open.Show();             _open.Activate();
+            BringToFront(_open);
             return;
         }
         _open = new SettingsWindow(settings, tools, changed);
@@ -69,6 +70,20 @@ internal sealed class SettingsWindow : Window
 
     /// <summary>Redraws the open settings window after the app changed a setting itself.</summary>
     public static void RefreshIfOpen() => _open?.Rebuild();
+
+    /// <summary>
+    /// Brings the window forward. Activate() on a minimised window does nothing visible: the window stays in
+    /// the taskbar and nothing appears, so it has to be restored first. The self-test calls this directly,
+    /// because a version of this that was commented out by accident still compiled and still passed every
+    /// build, and the window stayed reduced.
+    /// </summary>
+    internal static void BringToFront(Window window)
+    {
+        if (window.WindowState == WindowState.Minimized)
+            window.WindowState = WindowState.Normal;
+        window.Show();
+        window.Activate();
+    }
 
     private void Save()
     {
@@ -217,6 +232,28 @@ internal sealed class SettingsWindow : Window
                 }),
             glyph: "\uE790"));
 
+        root.Children.Add(Card(T("Softness", "النعومة"),
+            T("Rounds every corner by the same amount.", "يجعل كل الزوايا مستديرة بالقدر نفسه."),
+            Slider(0, 24, _settings.CornerRadius, v => _settings.CornerRadius = v, () =>
+            {
+                Theme.SetRadius(_settings.CornerRadius);
+                Save();
+                Rebuild();
+            })));
+
+        root.Children.Add(Card(T("Less movement", "حركة أقل"),
+            T("Skips the animations. The app works the same.", "يتخطى الحركات. يعمل التطبيق بالطريقة نفسها."),
+            Toggle(_settings.ReduceMotion, v =>
+            {
+                _settings.ReduceMotion = v;
+                Theme.ReduceMotion = v;
+                Save();
+            })));
+
+        root.Children.Add(Card(T("Your own colours", "ألوانك الخاصة"),
+            CustomThemeDescription(),
+            Button(T("Open the folder", "افتح المجلد"), () => OpenThemeFolder(), glyph: "\uE838")));
+
         root.Children.Add(SectionHeader(T("System", "النظام")));
         root.Children.Add(Card(T("Start when I sign in", "التشغيل عند تسجيل الدخول"), null,
             Toggle(ShellIntegration.IsAutostartEnabled, v => Apply(() => ShellIntegration.SetAutostart(v))), glyph: "\uE7E8"));
@@ -341,6 +378,43 @@ internal sealed class SettingsWindow : Window
         }
     }
 
+    /// <summary>
+    /// What the theme file is doing, in one line: nothing, applied, or ignored with the reason why. It
+    /// describes the theme that is in use, so it stays true even after the file on disk has changed.
+    /// </summary>
+    private string CustomThemeDescription()
+    {
+        var theme = Theme.Custom;
+        if (theme is null)
+        {
+            var path = Path.Combine(AppSettings.Folder, Core.CustomTheme.FileName);
+            if (!File.Exists(path))
+                return T("No theme file. Put a theme.json in this folder to change the colours; anything you leave out keeps the built-in one.",
+                         "لا يوجد ملف سمة. ضع ملف theme.json في هذا المجلد لتغيير الألوان، وما تتركه يبقى كما هو.");
+            var problems = Theme.CustomProblems;
+            return problems.Count > 0
+                ? T("The theme file was ignored: ", "تم تجاهل ملف السمة: ") + string.Join(" ", problems)
+                : T("The theme file was ignored.", "تم تجاهل ملف السمة.");
+        }
+
+        var count = theme.Themes.Values.Sum(v => v.Count);
+        var names = string.Join(", ", theme.Themes.Keys);
+        return T($"A theme file is in use: {count} colour(s) in {names}.", $"ملف السمة مستخدم: {count} لون في {names}.");
+    }
+
+    /// <summary>Opens the folder that holds settings.json and theme.json.</summary>
+    private void OpenThemeFolder()
+    {
+        try
+        {
+            Directory.CreateDirectory(AppSettings.Folder);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(AppSettings.Folder) { UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
+        {
+        }
+    }
+
     private Border UpdateCard()
     {
         var updater = Updater;
@@ -351,15 +425,19 @@ internal sealed class SettingsWindow : Window
         {
             status = "";
         }
-        else if (updater.Installing)
+        else if (updater.Step == Shell.UpdateStep.Downloading)
         {
-            status = T("Downloading and installing…", "جارٍ التنزيل والتثبيت…");
+            status = T("Downloading the installer…", "جارٍ تنزيل المثبِّت…");
+        }
+        else if (updater.Step == Shell.UpdateStep.Installing)
+        {
+            status = T("Installing…", "جارٍ التثبيت…");
         }
         else if (updater.Available is { } update)
         {
             status = T($"Version {update.Version} is available.", $"الإصدار {update.Version} متاح.");
             action = Button(Shell.Updater.IsInstalled ? T("Update", "تحديث") : T("Download", "تنزيل"),
-                () => _ = updater.InstallAsync(update), primary: true, glyph: "\uE896");
+                () => UI.UpdateNoticeWindow.Show(updater, update), primary: true, glyph: "\uE896");
         }
         else
         {

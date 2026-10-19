@@ -50,19 +50,20 @@ internal sealed class TrayIcon : IDisposable
     }
 
     /// <summary>Adds "Update to x.y.z" at the top of the menu and announces it once.</summary>
-    public void OfferUpdate(Version version, Action install)
+    public void OfferUpdate(Version version, Action show)
     {
         var text = T($"Update to version {version}", $"التحديث إلى الإصدار {version}");
         if (_update is null)
         {
             _update = new Forms.ToolStripMenuItem(text) { Font = new System.Drawing.Font(_icon.ContextMenuStrip!.Font, System.Drawing.FontStyle.Bold) };
-            _update.Click += (_, _) => install();
+            _update.Click += (_, _) => show();
             _icon.ContextMenuStrip.Items.Insert(0, _update);
             _icon.ContextMenuStrip.Items.Insert(1, new Forms.ToolStripSeparator());
         }
         Show(T("A new version is available", "يتوفّر إصدار جديد"),
             T($"Dropit {version} – click here to install.", $"\u200FDropit {version} – اضغط هنا للتثبيت."), false);
-        _balloonClick = install;
+        // The balloon leads to the update window, which can show what is happening and be closed again.
+        _balloonClick = show;
     }
 
     public void Show(string title, string text, bool error)

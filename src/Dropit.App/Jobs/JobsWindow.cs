@@ -226,7 +226,7 @@ internal sealed class JobCard : Border
         row.Children.Add(body);
         Child = row;
 
-        if (!Animate)
+        if (!Animate || Theme.ReduceMotion)
             return;
 
         // Slide in from the right.
@@ -242,7 +242,7 @@ internal sealed class JobCard : Border
 
     private void StartPulse()
     {
-        if (!Animate)
+        if (!Animate || Theme.ReduceMotion)
         {
             _fill.Width = 48;
             return;

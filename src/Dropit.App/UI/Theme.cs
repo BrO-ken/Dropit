@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
+using Dropit.Core;
 using Microsoft.Win32;
 
 namespace Dropit.App.UI;
@@ -184,7 +185,7 @@ internal static class Theme
         Shadow: 0.16,
         IsDark: false);
 
-    private sealed record Palette(
+    internal sealed record Palette(
         Color Backdrop,
         Color Ambient,
         double AmbientStrength,
@@ -262,6 +263,36 @@ internal static class Theme
     /// <summary>Forces one theme; null follows the Windows app setting. Used by the self-test.</summary>
     public static AppTheme? Override { get; set; }
 
+    /// <summary>
+    /// The user's <c>theme.json</c>, if there is one. Its colours are applied on top of the built-in palette of
+    /// the theme in use, so a file that mentions one colour changes that colour and nothing else.
+    /// </summary>
+    public static CustomTheme? Custom { get; set; }
+
+    /// <summary>
+    /// What was wrong with the theme file, if anything. Kept with the theme it describes, so the settings can
+    /// say what happened without reading the file again.
+    /// </summary>
+    public static IReadOnlyList<string> CustomProblems { get; set; } = [];
+
+    /// <summary>
+    /// The corner radius every rounded surface uses. One setting drives the whole UI, so the app can read as
+    /// soft or as sharp without any other change.
+    /// </summary>
+    public static double Radius { get; private set; } = 10;
+
+    /// <summary>Radius for small controls (buttons, segmented controls): a little less than <see cref="Radius"/>.</summary>
+    public static double RadiusSmall { get; private set; } = 7;
+
+    /// <summary>Radius for the smallest surfaces (badges, chips).</summary>
+    public static double RadiusTiny { get; private set; } = 6;
+
+    /// <summary>
+    /// When the user asked for less movement, the windows appear without the slide and fade. The app still
+    /// works the same; only the animation is left out.
+    /// </summary>
+    public static bool ReduceMotion { get; set; }
+
     public static bool IsDark => _palette.IsDark;
 
     public static Brush AccentSoft { get; private set; } = null!;
@@ -269,15 +300,123 @@ internal static class Theme
     // ------------------------------------------------------------------ lifecycle
 
     /// <summary>Re-reads the chosen theme and the Windows light/dark setting, then repaints the tokens.</summary>
-    public static void Refresh() => Use((Override ?? AppTheme.System) switch
+    public static void Refresh()
     {
-        AppTheme.DarkGlass => DarkGlassPalette,
-        AppTheme.DeepNight => DeepNightPalette,
-        AppTheme.Mint => MintPalette,
-        AppTheme.Light => LightPalette,
-        AppTheme.Warm => WarmPalette,
-        _ => ReadSystemDark() ? DarkGlassPalette : LightPalette,
-    });
+        var (name, palette) = Resolve();
+        // A theme file that mentions "Light" also changes the System theme when Windows is in light mode,
+        // because there is no separate palette behind the name: System is DarkGlass or Light.
+        var over = Custom?.For(name);
+        Use(over is { Count: > 0 } ? Apply(palette, over) : palette);
+    }
+
+    /// <summary>Sets the corner radius family from the user's value.</summary>
+    public static void SetRadius(double radius)
+    {
+        Radius = Math.Clamp(radius, 0, 28);
+        RadiusSmall = Math.Round(Radius * 0.7);
+        RadiusTiny = Math.Round(Radius * 0.6);
+    }
+
+    /// <summary>
+    /// The palette of a theme with the given colours applied. The self-test uses this to check that every
+    /// colour slot in a theme file reaches a real colour, and that every colour the app paints has a slot.
+    /// </summary>
+    internal static Palette PaletteFor(AppTheme theme, IReadOnlyDictionary<string, string>? over = null)
+    {
+        var palette = theme switch
+        {
+            AppTheme.DarkGlass => DarkGlassPalette,
+            AppTheme.DeepNight => DeepNightPalette,
+            AppTheme.Mint => MintPalette,
+            AppTheme.Light => LightPalette,
+            AppTheme.Warm => WarmPalette,
+            _ => DarkGlassPalette,
+        };
+        return over is { Count: > 0 } ? Apply(palette, over) : palette;
+    }
+
+    /// <summary>The built-in palette for the chosen theme, and the name its theme file section is under.</summary>
+    private static (string Name, Palette Palette) Resolve() => (Override ?? AppTheme.System) switch
+    {
+        AppTheme.DarkGlass => (nameof(AppTheme.DarkGlass), DarkGlassPalette),
+        AppTheme.DeepNight => (nameof(AppTheme.DeepNight), DeepNightPalette),
+        AppTheme.Mint => (nameof(AppTheme.Mint), MintPalette),
+        AppTheme.Light => (nameof(AppTheme.Light), LightPalette),
+        AppTheme.Warm => (nameof(AppTheme.Warm), WarmPalette),
+        _ => ReadSystemDark()
+            ? (nameof(AppTheme.DarkGlass), DarkGlassPalette)
+            : (nameof(AppTheme.Light), LightPalette),
+    };
+
+    /// <summary>
+    /// One colour slot of the palette. The slot names are <see cref="CustomTheme.Tokens"/>; the self-test checks
+    /// that every colour the app paints is reachable here, so a new one cannot be added without a name.
+    /// </summary>
+    private static Palette Apply(Palette p, IReadOnlyDictionary<string, string> over)
+    {
+        foreach (var (slot, value) in over)
+        {
+            if (!TryParseColor(value, out var color))
+                continue;
+            p = slot switch
+            {
+                "backdrop" => p with { Backdrop = color },
+                "ambient" => p with { Ambient = color },
+                "panel" => p with { Panel = color },
+                "panelEdge" => p with { PanelEdge = color },
+                "highlight" => p with { Highlight = color },
+                "card" => p with { Card = color },
+                "cardEdge" => p with { CardEdge = color },
+                "slice" => p with { Slice = color },
+                "sliceEdge" => p with { SliceEdge = color },
+                "hub" => p with { Hub = color },
+                "track" => p with { Track = color },
+                "page" => p with { Page = color },
+                "hover" => p with { Hover = color },
+                "text" => p with { Text = color },
+                "muted" => p with { Muted = color },
+                "success" => p with { Success = color },
+                "error" => p with { Error = color },
+                "accent" => p with { Accent = color },
+                "accent2" => p with { Accent2 = color },
+                "textOnAccent" => p with { TextOnAccent = color },
+                _ => throw new ArgumentOutOfRangeException(nameof(slot), slot, "Unknown theme colour slot."),
+            };
+        }
+        return p;
+    }
+
+    /// <summary>Parses <c>#RRGGBB</c> or <c>#AARRGGBB</c>.</summary>
+    internal static bool TryParseColor(string text, out Color color)
+    {
+        color = default;
+        if (text.Length is not (7 or 9) || text[0] != '#')
+            return false;
+        try
+        {
+            var hex = text[1..];
+            if (hex.Length == 6)
+            {
+                color = Color.FromRgb(
+                    Convert.ToByte(hex[..2], 16),
+                    Convert.ToByte(hex[2..4], 16),
+                    Convert.ToByte(hex[4..], 16));
+            }
+            else
+            {
+                color = Color.FromArgb(
+                    Convert.ToByte(hex[..2], 16),
+                    Convert.ToByte(hex[2..4], 16),
+                    Convert.ToByte(hex[4..6], 16),
+                    Convert.ToByte(hex[6..], 16));
+            }
+            return true;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+    }
 
     private static void Use(Palette palette)
     {

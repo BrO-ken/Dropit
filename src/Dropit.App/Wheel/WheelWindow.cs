@@ -157,6 +157,19 @@ internal sealed class WheelWindow : Window
         _anchor = screenPoint;
         Show();
         PositionAtAnchor();
+        if (Theme.ReduceMotion)
+        {
+            // Everything is already in its final state; the animations only move it there.
+            AnimateSlicesIn();
+            if (Mode == WheelMode.Click)
+            {
+                ForegroundHelper.Force(this);
+                Keyboard.Focus(this);
+                if (_ops.Count > 0)
+                    SetHighlight(0);
+            }
+            return;
+        }
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
         var duration = TimeSpan.FromMilliseconds(140);
         BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = ease });
@@ -601,6 +614,8 @@ internal sealed class WheelWindow : Window
     /// <summary>Slices grow out of the centre one after another.</summary>
     private void AnimateSlicesIn()
     {
+        if (Theme.ReduceMotion)
+            return;
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
         for (var i = 0; i < _groups.Count; i++)
         {

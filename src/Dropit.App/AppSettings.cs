@@ -58,6 +58,21 @@ public sealed class AppSettings
     /// <summary>Null follows the Windows light/dark setting; otherwise one of the built-in directions.</summary>
     public UI.AppTheme? Theme { get; set; }
 
+    /// <summary>
+    /// The corner radius every rounded surface uses, in pixels. One value for the whole app, so it can read as
+    /// soft or as sharp without anything else changing.
+    /// </summary>
+    public int CornerRadius { get; set; } = 10;
+
+    /// <summary>Leave the animations out. The app behaves the same, it just stops moving.</summary>
+    public bool ReduceMotion { get; set; }
+
+    /// <summary>
+    /// The user's <c>theme.json</c>, if there is one. It overrides the colours of the built-in themes; anything
+    /// it does not mention keeps the colour the app ships with.
+    /// </summary>
+    public static CustomTheme? LoadCustomTheme(IList<string>? problems = null) => CustomTheme.Load(Folder, problems);
+
     public WheelKind? WheelFor(ModifierKey key)
     {
         if (key == ModifierKey.None)

@@ -138,7 +138,7 @@ internal static class Controls
             Background = Theme.Card,
             BorderBrush = Theme.CardBorder,
             BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(10),
+            CornerRadius = new CornerRadius(Theme.Radius),
             Padding = new Thickness(18, 14, 18, 14),
             Margin = new Thickness(0, 0, 0, 4),
             SnapsToDevicePixels = true,
@@ -166,7 +166,7 @@ internal static class Controls
             var text = new TextBlock { Text = label, FontSize = Type(12.5), VerticalAlignment = VerticalAlignment.Center };
             var pill = new Border
             {
-                CornerRadius = new CornerRadius(7),
+                CornerRadius = new CornerRadius(Theme.RadiusSmall),
                 Padding = new Thickness(10, 5, 10, 6),
                 Background = Brushes.Transparent,
                 Cursor = Cursors.Hand,
@@ -184,7 +184,7 @@ internal static class Controls
         return new Border
         {
             Background = Theme.Track,
-            CornerRadius = new CornerRadius(9),
+            CornerRadius = new CornerRadius(Theme.RadiusSmall),
             Padding = new Thickness(2),
             Child = WrappingRow([.. pills.Select(p => (UIElement)p.Pill)]),
         };
@@ -199,7 +199,7 @@ internal static class Controls
         {
             Width = 40,
             Height = 20,
-            CornerRadius = new CornerRadius(10),
+            CornerRadius = new CornerRadius(Theme.Radius),
             BorderThickness = new Thickness(1),
             Cursor = Cursors.Hand,
             Child = knob,
@@ -216,7 +216,7 @@ internal static class Controls
             var x = rtl
                 ? (on ? -23.0 : -3.0)
                 : (on ? 23.0 : 3.0);
-            if (animate)
+            if (animate && !Theme.ReduceMotion)
                 translate.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(x, TimeSpan.FromMilliseconds(120)) { EasingFunction = new CubicEase() });
             else
                 translate.X = x;
@@ -318,7 +318,7 @@ internal static class Controls
             Background = normal,
             BorderBrush = primary ? Brushes.Transparent : Theme.PanelBorder,
             BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(8),
+            CornerRadius = new CornerRadius(Theme.RadiusSmall),
             Padding = new Thickness(14, 6, 14, 7),
             Cursor = Cursors.Hand,
             Child = content,
@@ -344,7 +344,7 @@ internal static class Controls
     /// <summary>A small coloured status label, e.g. "found" / "missing".</summary>
     public static Border Badge(string text, bool good) => new()
     {
-        CornerRadius = new CornerRadius(6),
+        CornerRadius = new CornerRadius(Theme.RadiusTiny),
         Padding = new Thickness(8, 2, 8, 3),
         Background = Tint(good ? Theme.Success : Theme.Error, Theme.IsDark ? (byte)0x2E : (byte)0x1F),
         Child = new TextBlock { Text = text, FontSize = Type(11.5), FontWeight = FontWeights.SemiBold, Foreground = good ? Theme.Success : Theme.Error },

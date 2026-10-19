@@ -42,13 +42,20 @@ internal static class SelfTest
             {
                 Loc.Current = language;
                 Theme.Override = theme;
+                Theme.Custom = null;
                 Theme.Refresh();
-                RenderAll(Path.Combine(outDir, folder), log);
+                RenderAll(Path.Combine(outDir, folder), log, theme);
             }
+
+            // The same windows, with a theme file the way a user would write one: a real file on disk, read by
+            // the real loader, applied to the real palette. This is the only way to see that the file path
+            // works and not just the palette behind it.
+            RenderCustomTheme(outDir, log);
+
 
             log.AddRange(SmokeTest.Run(Path.Combine(outDir, "smoke")));
             // Saved after every step, so a hard crash (which skips the catch below) still shows where it stopped.
-            foreach (var step in new Action[] { () => TestSettingsRoundTrip(log), () => TestCaptionClosesWindow(log), () => TestExplorerCom(outDir, log), () => TestDrops(log), () => TestOcr(outDir, log), () => TestUpdateCheck(log) })
+            foreach (var step in new Action[] { () => TestSettingsRoundTrip(log), () => TestCaptionClosesWindow(log), () => TestMinimisedWindowsComeBack(log), () => TestThemeSlots(log), () => TestExplorerCom(outDir, log), () => TestDrops(log), () => TestOcr(outDir, log), () => TestUpdateCheck(log) })
             {
                 File.WriteAllLines(Path.Combine(outDir, "self-test.txt"), log);
                 step();
@@ -72,11 +79,11 @@ internal static class SelfTest
         }
     }
 
-    private static void RenderAll(string outDir, List<string> log)
+    private static void RenderAll(string outDir, List<string> log, UI.AppTheme? theme = null)
     {
         Directory.CreateDirectory(outDir);
         string N(string en, string ar) => Loc.Current == Language.Arabic ? ar : en;
-        var settings = new AppSettings();
+        var settings = new AppSettings { Theme = theme };
         var tools = new ToolLocator();
         var core = WheelController.BuildOperations();
         var actions = Dropits.Build(settings, () => { });
@@ -152,6 +159,57 @@ internal static class SelfTest
     }
 
     /// <summary>The settings file is written with source-generated JSON (no reflection in the trimmed build).</summary>
+    /// <summary>
+    /// Renders the windows with a theme file that a user could have written, so the whole path is exercised:
+    /// a file on disk, the loader, the palette, and the drawing.
+    /// </summary>
+    private static void RenderCustomTheme(string outDir, List<string> log)
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "dropit-selftest-theme");
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, Core.CustomTheme.FileName), """
+                {
+                  "Warm": {
+                    "accent": "#7A2BD1",
+                    "accent2": "#4C108C",
+                    "page": "#F2EFF7",
+                    "card": "#FBFAFD"
+                  }
+                }
+                """);
+            var problems = new List<string>();
+            var custom = Core.CustomTheme.Load(folder, problems);
+            Check(custom is not null, "a theme file the user wrote is read");
+            Check(problems.Count == 0, "a valid theme file has no complaints");
+            if (custom is null)
+                return;
+
+            Loc.Current = Language.English;
+            Theme.Override = AppTheme.Warm;
+            Theme.Custom = custom;
+            Theme.Refresh();
+            Check(((System.Windows.Media.SolidColorBrush)Theme.Accent).Color == System.Windows.Media.Color.FromRgb(0x7A, 0x2B, 0xD1),
+                "the colour from the theme file is the one the app paints with");
+
+            RenderAll(Path.Combine(outDir, "en-custom"), log, AppTheme.Warm);
+
+            Theme.Custom = null;
+            Theme.Refresh();
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(folder, true);
+            }
+            catch (IOException)
+            {
+            }
+        }
+    }
+
     private static void TestSettingsRoundTrip(List<string> log)
     {
         var settings = new AppSettings { Hotkey = HotkeyPreset.CtrlAltW, FavoriteOperations = ["image.to.webp"], Language = Language.Arabic };
@@ -314,6 +372,83 @@ private static void TestCaptionClosesWindow(List<string> log)
         var result = Task.Run(() => Ocr.OcrOperation.RecognizeAsync(engine, png)).GetAwaiter().GetResult();
         Check(result.Contains("12345"), $"OCR read \"{result}\"");
         log.Add($"ok ocr: {result}");
+    }
+
+    /// <summary>
+    /// A theme file can only change the colours it names, so the names and the palette have to agree: every
+    /// colour the app paints needs a slot to reach it, and every slot needs a colour behind it. A colour
+    /// added to the palette without a slot would be unreachable for the user, and a slot without a colour
+    /// would silently do nothing.
+    /// </summary>
+    private static void TestThemeSlots(List<string> log)
+    {
+        var colours = typeof(UI.Theme.Palette)
+            .GetProperties()
+            .Where(p => p.PropertyType == typeof(System.Windows.Media.Color))
+            .Select(p => char.ToLowerInvariant(p.Name[0]) + p.Name[1..])
+            .OrderBy(n => n, StringComparer.Ordinal)
+            .ToList();
+        var slots = Core.CustomTheme.Tokens.OrderBy(n => n, StringComparer.Ordinal).ToList();
+
+        Check(colours.SequenceEqual(slots, StringComparer.Ordinal),
+            "every colour of the palette has a theme file slot, and every slot has a colour");
+
+        // Each slot has to change the palette, not just exist.
+        var palette = UI.Theme.PaletteFor(UI.AppTheme.Warm);
+        foreach (var slot in Core.CustomTheme.Tokens)
+        {
+            var changed = UI.Theme.PaletteFor(UI.AppTheme.Warm, new Dictionary<string, string> { [slot] = "#FF00FF" });
+            Check(!changed.Equals(palette), $"theme slot '{slot}' changes the palette");
+        }
+
+        // A file with one colour changes that colour and leaves the rest alone.
+        var one = UI.Theme.PaletteFor(UI.AppTheme.Warm, new Dictionary<string, string> { ["accent"] = "#123456" });
+        Check(one.Accent == System.Windows.Media.Color.FromRgb(0x12, 0x34, 0x56) && one.Page == palette.Page,
+            "a theme file changes only the colours it names");
+
+        // Every theme the app offers has to be nameable in a theme file, and no others.
+        var themes = Enum.GetNames<UI.AppTheme>()
+            .Where(n => n != nameof(UI.AppTheme.System))
+            .OrderBy(n => n, StringComparer.Ordinal);
+        var names = Core.CustomTheme.ThemeNames.OrderBy(n => n, StringComparer.Ordinal);
+        Check(themes.SequenceEqual(names, StringComparer.Ordinal),
+            "every theme of the app can be named in a theme file, and the file names no other");
+        log.Add("ok theme slots");
+    }
+
+    /// <summary>
+    /// The settings, home and wheel editor windows are opened from the tray. When one of them was minimised,
+    /// opening it again has to bring it back: Activate() on a minimised window does nothing at all, and the
+    /// user is left with nothing on screen. This check exists because a version of that fix was commented out
+    /// by accident - it still compiled, still passed every build, and the window stayed reduced.
+    /// </summary>
+    private static void TestMinimisedWindowsComeBack(List<string> log)
+    {
+        Check(Restores(w => UI.SettingsWindow.BringToFront(w)),
+            "the settings window comes back when it was minimised");
+        Check(Restores(w => UI.HomeWindow.BringToFront(w)),
+            "the home window comes back when it was minimised");
+        Check(Restores(w => UI.WheelEditorWindow.BringToFront(w)),
+            "the wheel editor comes back when it was minimised");
+        log.Add("ok minimised windows");
+    }
+
+    private static bool Restores(Action<Window> bringToFront)
+    {
+        var window = new Window { Width = 200, Height = 100, WindowStyle = WindowStyle.None, ShowInTaskbar = false, Left = -5000 };
+        try
+        {
+            window.Show();
+            window.WindowState = WindowState.Minimized;
+            if (window.WindowState != WindowState.Minimized)
+                return false;
+            bringToFront(window);
+            return window.WindowState == WindowState.Normal;
+        }
+        finally
+        {
+            window.Close();
+        }
     }
 
     /// <summary>Asks the real GitHub API, as the app does; logged only (the network may be unavailable).</summary>
