@@ -22,6 +22,13 @@ public enum AppTheme
     Mint,
     /// <summary>A light surface with the same layering, for bright rooms.</summary>
     Light,
+    /// <summary>
+    /// Warm paper neutrals with a vivid orange accent, the palette of Tangerine on macOS - the app this
+    /// whole idea comes from. The neutrals there are not grey: the text is #282b29 and the muted tone
+    /// #828782, both carrying a green cast, over a #f4f4f4 page. The accent #f35b28 is deepened a step
+    /// for anything that carries white text, which #f35b28 does not at a legible ratio.
+    /// </summary>
+    Warm,
 }
 
 /// <summary>
@@ -146,6 +153,37 @@ internal static class Theme
         Shadow: 0.20,
         IsDark: false);
 
+    // Tangerine on macOS: a warm paper light theme. Every neutral below is lifted straight off the site,
+    // and they are green-grey rather than true grey - #282b29 text, #828782 muted, #e9ece8 rules on a
+    // #f4f4f4 page. Cards get the accent at 6% (#c5641810) on their border instead of plain black, which
+    // is what gives the page its warm edge, and the filled pills get the #fff0e4 tint.
+    private static readonly Palette WarmPalette = new(
+        Backdrop: Color.FromArgb(0xF4, 0xF4, 0xF4, 0xF4),
+        Ambient: Color.FromArgb(0x00, 0xF3, 0x5B, 0x28),
+        AmbientStrength: 0.13,
+        Panel: Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF),
+        PanelEdge: Color.FromArgb(0x18, 0xC5, 0x64, 0x18),
+        Highlight: Color.FromArgb(0x00, 0xFF, 0xFF, 0xFF),
+        Card: Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF),
+        CardEdge: Color.FromArgb(0x14, 0xC5, 0x64, 0x18),
+        Slice: Color.FromArgb(0xFF, 0xF4, 0xF5, 0xF1),
+        SliceEdge: Color.FromArgb(0x0C, 0xC5, 0x64, 0x18),
+        Hub: Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF),
+        Track: Color.FromArgb(0xFF, 0xE5, 0xE7, 0xE4),
+        Page: Color.FromArgb(0xFF, 0xF4, 0xF4, 0xF4),
+        Hover: Color.FromArgb(0x0A, 0xC5, 0x64, 0x18),
+        Text: Color.FromRgb(0x28, 0x2B, 0x29),
+        Muted: Color.FromRgb(0x77, 0x7D, 0x78),
+        Success: Color.FromRgb(0x4C, 0x6B, 0x3F),
+        Error: Color.FromRgb(0xC5, 0x36, 0x0B),
+        // The site's #f35b28 is only 3.3:1 against white text, so the filled pills use the next step down
+        // in the same ramp: white clears 4.8:1 on #d2431a and 6.5:1 on #ad3210.
+        Accent: Color.FromRgb(0xD2, 0x43, 0x1A),
+        Accent2: Color.FromRgb(0xAD, 0x32, 0x10),
+        TextOnAccent: Colors.White,
+        Shadow: 0.16,
+        IsDark: false);
+
     private sealed record Palette(
         Color Backdrop,
         Color Ambient,
@@ -237,6 +275,7 @@ internal static class Theme
         AppTheme.DeepNight => DeepNightPalette,
         AppTheme.Mint => MintPalette,
         AppTheme.Light => LightPalette,
+        AppTheme.Warm => WarmPalette,
         _ => ReadSystemDark() ? DarkGlassPalette : LightPalette,
     });
 

@@ -204,6 +204,7 @@ internal sealed class SettingsWindow : Window
                     (T("Deep night", "ليل عميق"), AppTheme.DeepNight),
                     (T("Mint", "نعناعي"), AppTheme.Mint),
                     (T("Light", "فاتح"), AppTheme.Light),
+                    (T("Warm", "دافئ"), AppTheme.Warm),
                 ],
                 _settings.Theme,
                 value =>

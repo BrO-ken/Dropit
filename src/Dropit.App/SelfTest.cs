@@ -31,11 +31,13 @@ internal static class SelfTest
                          (Language.English, AppTheme.DarkGlass, "en"),
                          (Language.English, AppTheme.Light, "en-light"),
                          (Language.English, AppTheme.DeepNight, "en-night"),
-                         (Language.English, AppTheme.Mint, "en-mint"),
-                         (Language.Arabic, AppTheme.DarkGlass, "ar"),
+(Language.English, AppTheme.Mint, "en-mint"),
+                          (Language.English, AppTheme.Warm, "en-warm"),
+                          (Language.Arabic, AppTheme.DarkGlass, "ar"),
                          (Language.Arabic, AppTheme.Light, "ar-light"),
                          (Language.Arabic, AppTheme.DeepNight, "ar-night"),
                          (Language.Arabic, AppTheme.Mint, "ar-mint"),
+                          (Language.Arabic, AppTheme.Warm, "ar-warm"),
                      })
             {
                 Loc.Current = language;
