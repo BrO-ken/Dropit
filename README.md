@@ -141,6 +141,24 @@ Push a commit to `main` whose message starts with `Release v1.2.3` (or run the *
 
 The same run builds the Linux tarball, installs the AUR package on Arch Linux to test it and, when the `AUR_SSH_PRIVATE_KEY` secret holds the key of the AUR account that maintains `dropit-bin`, pushes the updated PKGBUILD to the AUR.
 
+### How an installed copy updates itself
+
+Once a release exists, an installed copy finds it on its own:
+
+1. Twenty seconds after start, then every six hours, the app asks `api.github.com/repos/BrO-ken/Dropit/releases/latest` for the newest release. Nothing about your files is sent.
+2. If the tag is newer than the running version, a balloon appears and the tray menu gains an *Update to version x.y.z* entry.
+3. Clicking it downloads `Dropit-Setup-x.y.z.exe` to a uniquely named file in `%TEMP%`, checks its SHA-256 against the `digest` GitHub published for that asset, and refuses the update if the two differ or if no digest was published at all.
+4. The installer replaces the running copy and relaunches the app with `--updated`, which reports *Dropit was updated*.
+
+`Settings > Updates` shows the same state and has a **Check now** button that works whether or not the automatic check is enabled.
+
+A copy unzipped from the zip has no uninstaller next to it, so it cannot replace itself: it opens the release page instead. Only the installer can update in place.
+
+Two things silently break this, and both have to be right:
+
+- **The repository has to be reachable without a token.** The app queries the API anonymously, and GitHub answers `404 Not Found` for a private repository. Every check then fails quietly and no update is ever offered. A personal access token must not be embedded in the app to work around this: it can be extracted from the binary.
+- **The PKGBUILD has to download from this repository.** It once pointed at the upstream project, where the tag did not exist, and `makepkg` failed on a package that had passed every CI job. The packaging step now fails the build if the generated PKGBUILD points anywhere else.
+
 ## Project layout
 
 ```
