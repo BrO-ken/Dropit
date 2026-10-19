@@ -20,7 +20,7 @@ cp "$root/LICENSE" "$root/THIRD-PARTY-NOTICES.md" "$stage/dropit/share/"
 tarball="Dropit-$version-linux-x64.tar.xz"
 XZ_OPT="-9e -T0" tar -C "$stage" --owner=0 --group=0 -cJf "$out/$tarball" dropit
 sha="$(sha256sum "$out/$tarball" | cut -d' ' -f1)"
-source="${4:-$tarball::https://github.com/Metamorfolog/file_action/releases/download/v$version/$tarball}"
+source="${4:-$tarball::https://github.com/BrO-ken/Dropit/releases/download/v$version/$tarball}"
 
 license="LicenseRef-AllRightsReserved"
 if [ -f "$root/LICENSE" ] && grep -q "MIT License" "$root/LICENSE"; then license="MIT"; fi
