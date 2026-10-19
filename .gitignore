@@ -9,6 +9,6 @@ TestResults/
 .vs/
 .vscode/
 .idea/
-`--`
+# Artefacts de self-test ecrits a la racine quand le dossier de sortie est passe en --out= :
+# l'argument est en fait positionnel, donc la sortie atterrit dans un dossier "--lang=...".
 --*
-selftest/
